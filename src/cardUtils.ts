@@ -1,114 +1,61 @@
-// 判断牌型的枚举
-enum CardType {
-  Single,        // 单张
-  Pair,          // 对子
-  StraightPair,  // 连对
-  Straight,      // 顺子
-  Triple,        // 三带
-  TripleWithSingle,  // 三带一
-  TripleWithPair,    // 三带对
-  Bomb,          // 炸弹
-  JokerBomb,     // 王炸
-  FourWithTwo,   // 四带二
-  Invalid        // 无效牌型
-}
+const initCards = () => {
+  const originCardHeap = [{cardValue: 14, cardName: '小王'}, {
+    cardValue: 15,
+    cardName: '大王'
+  }, ...Array.from({length: 13 * 4}, (_, index) => {
+    const cardValue = Math.ceil((index + 1) / 4)
+    let cardName = String(cardValue + 2);
+    if (cardName == '14') {
+      cardName = 'A'
+    } else if (cardName == '15') {
+      cardName = '2'
+    }
+    return {cardValue, cardName}
+  })]
 
-// 判断牌型的函数
-function getCardType(cards: number[]): CardType {
-  const length = cards.length;
-
-  // 牌型判断逻辑
-  if (length === 1) {
-    return CardType.Single;
-  } else if (length === 2 && cards[0] === cards[1]) {
-    return cards[0] === 52 ? CardType.JokerBomb : CardType.Pair;
-  } else if (length >= 3 && length % 2 === 0 && isStraightPair(cards)) {
-    return CardType.StraightPair;
-  } else if (length >= 5 && isStraight(cards)) {
-    return CardType.Straight;
-  } else if (length === 3 && cards[0] === cards[1] && cards[0] === cards[2]) {
-    return CardType.Triple;
-  } else if (length === 4 && cards[0] === cards[1] && cards[0] === cards[2] && cards[0] === cards[3]) {
-    return CardType.Bomb;
-  } else if (length === 4 && (cards[0] === cards[1] && cards[2] === cards[3] || cards[0] === cards[1] && cards[0] === cards[2])) {
-    return CardType.TripleWithSingle;
-  } else if (length === 5 && cards[0] === cards[1] && cards[0] === cards[2] && cards[3] === cards[4] ||
-    length === 5 && cards[0] === cards[1] && cards[2] === cards[3] && cards[0] === cards[2] ||
-    length === 5 && cards[2] === cards[3] && cards[2] === cards[4] && cards[0] === cards[1]) {
-    return CardType.TripleWithPair;
-  } else if (length === 6 && isFourWithTwo(cards)) {
-    return CardType.FourWithTwo;
+  function shuffleCards(arr) {
+    arr = JSON.parse(JSON.stringify(arr));
+    for (const key in arr) {
+      let index = parseInt(String(Math.random() * arr.length));
+      [arr[key], arr[index]] = [arr[index], arr[key]];
+    }
+    // arr.reverse();
+    return arr;
   }
 
-  return CardType.Invalid;
-}
+  let newAll = shuffleCards(originCardHeap);
 
-// 判断是否为连对
-function isStraightPair(cards: number[]): boolean {
-  const sorted = [...cards].sort((a, b) => a - b);
+  function dealCards(arr) {
+    let player1 = arr.slice(0, 17);
+    let player2 = arr.slice(17, 34);
+    let player3 = arr.slice(34, 51);
+    let holeCards = arr.slice(51, 54);
+    return {player1, player2, player3, holeCards};
+  }
 
-  for (let i = 0; i < sorted.length - 1; i += 2) {
-    if (sorted[i] !== sorted[i + 1] || sorted[i] + 1 !== sorted[i + 2]) {
-      return false;
+  let {player1, player2, player3, holeCards} = dealCards(newAll);
+
+  // 排序
+  function sortCards(arr) {
+    // 排大小
+    arr.sort((a, b) => b.cardValue - a.cardValue);
+    for (let i = 0; i < 4; i++) {
+      for (const key in arr) {
+        if (Number(key) != arr.length - 1) {
+          if (arr[key].cardName == arr[+key + 1].cardName) {
+            [arr[key], arr[+key + 1]] = [arr[+key + 1], arr[key]];
+          }
+        }
+      }
     }
   }
 
-  return true;
-}
+  sortCards(player1)
+  sortCards(player2)
+  sortCards(player3)
+  sortCards(holeCards)
 
-// 判断是否为顺子
-function isStraight(cards: number[]): boolean {
-  const sorted = [...cards].sort((a, b) => a - b);
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    if (sorted[i] + 1 !== sorted[i + 1]) {
-      return false;
-    }
+  return {
+    player1, player2, player3, holeCards
   }
-
-  return true;
-}
-
-// 判断是否为四带二
-function isFourWithTwo(cards: number[]): boolean {
-  const counts = new Map<number, number>();
-
-  for (const card of cards) {
-    counts.set(card, (counts.get(card) || 0) + 1);
-  }
-
-  const values = Array.from(counts.values());
-  return values.includes(4) && values.includes(2);
-}
-
-// 判断能否管住上家的牌
-function canBeatPrevious(cards: number[], previous: number[]): boolean {
-  const cardType = getCardType(cards);
-  const previousType = getCardType(previous);
-
-  if (cardType === CardType.Invalid) {
-    return false;
-  }
-
-  if (previousType === CardType.Invalid) {
-    return true;
-  }
-
-  if (cardType === CardType.JokerBomb) {
-    return true;
-  }
-
-  if (cardType === CardType.Bomb && previousType=== CardType.Bomb) {
-    return cards[0] > previous[0];
-  }
-
-  if (cardType !== previousType) {
-    return false;
-  }
-
-  if (cards.length !== previous.length) {
-    return false;
-  }
-
-  return cards[0] > previous[0];
 }

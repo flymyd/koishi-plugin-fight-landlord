@@ -50,3 +50,9 @@ export const autoQuitRoom = async (ctx: Context, _: any) => {
     return `已退出房间 ${currentRoom.id} 。`
   } else return ''
 }
+
+// 获取房间内的玩家人数
+export const getPlayerCount = (room: FightLandlordRoomModel) => {
+  const {player1, player2, player3} = room;
+  return [player1, player2, player3].filter(player => player !== '').length;
+}
