@@ -1,6 +1,7 @@
 import {Context, Schema} from 'koishi'
-import {FightLandlordDetailExtends, FightLandlordRoomExtends} from "./types/DbTypes";
+import {FightLandlordDetailExtends, FightLandlordDetailModel, FightLandlordRoomExtends} from "./types/DbTypes";
 import {autoQuitRoom, getJoinedRoom, getPlayerCount, quitRoom, resetDB} from "./DbUtils";
+import {initCards, sortCards} from "./cardUtils";
 
 export const name = 'fight-landlord'
 export const using = ['database']
@@ -112,8 +113,27 @@ export function apply(ctx: Context) {
     }
     // 初始化对局详情, 房间状态设置为进行中
     room.status = 1;
-
+    const cards = initCards();
     // 随机一个幸运玩家当地主
+    const randomLordIndex = Math.floor(Math.random() * 3) + 1;
+    const lord = {id: room['player' + randomLordIndex], name: room['player' + randomLordIndex + 'Name']}
+    res += `本局地主是: ${lord.name}\n地主牌是: ${cards.holeCards.map(o => o.cardName).join('、')}\n`;
+    const currentRoomDetail = {
+      roomId: room.id,
+      card1: cards.card1,
+      card2: cards.card2,
+      card3: cards.card3,
+      lordPlayer: lord,
+      previousPlayer: null,
+      previousCard: [],
+      usedCard: []
+    };
+    currentRoomDetail['card' + randomLordIndex] = [...currentRoomDetail['card' + randomLordIndex], ...cards.holeCards]
+    sortCards(currentRoomDetail['card' + randomLordIndex])
+    // 初始化对局
+    await ctx.database.create('fightLandlordDetail', currentRoomDetail)
+    res += `房间 ${room.id} 游戏开始！`
+    return res;
   })
   ctx.command('ddz.play', '进行出牌').action(async (_, card: string) => {
     // 必须在一个已经开始的对局中
@@ -123,5 +143,7 @@ export function apply(ctx: Context) {
   })
   ctx.command('ddz.test', '测试牌').action(async (_) => {
     // return canBeatPrevious([3], [2])
+    const info = await ctx.database.get('fightLandlordDetail', {roomId: 1});
+    return JSON.stringify(info)
   })
 }
