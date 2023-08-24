@@ -8,7 +8,7 @@ export const resetDB = async (ctx: Context) => {
   await ctx.model.extend('fightLandlordDetail', FightLandlordDetailExtends)
 }
 // 查询是否已经在房间中
-export const getJoinedRoom = async (ctx: Context, _: any)=>{
+export const getJoinedRoom = async (ctx: Context, _: any) => {
   const {userId} = _.session.author;
   return await ctx.database.get('fightLandlordRoom', {
     $or: [
@@ -36,5 +36,17 @@ export const quitRoom = async (ctx: Context, room: FightLandlordRoomModel, userI
     room[uKey + 'Name'] = ''
     await ctx.database.upsert('fightLandlordRoom', [room])
   }
+}
 
+// 自动退出房间逻辑: 如果已经在房间里则先退出, 适用于create、join、quit
+export const autoQuitRoom = async (ctx: Context, _: any) => {
+  const {userId, username} = _.session.author;
+  // 查询是否已经在房间中
+  const joinedRoomList = await getJoinedRoom(ctx, _);
+  if (joinedRoomList.length > 0) {
+    // 退出已有房间
+    const currentRoom = joinedRoomList[0];
+    await quitRoom(ctx, currentRoom, userId)
+    return `已退出房间 ${currentRoom.id} 。`
+  } else return ''
 }
