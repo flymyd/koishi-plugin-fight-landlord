@@ -12,6 +12,8 @@ export function sortCards(arr) {
     }
   }
 }
+
+// 初始化牌局
 export const initCards = () => {
   const originCardHeap = [{cardValue: 14, cardName: '小王'}, {
     cardValue: 15,
@@ -19,7 +21,13 @@ export const initCards = () => {
   }, ...Array.from({length: 13 * 4}, (_, index) => {
     const cardValue = Math.ceil((index + 1) / 4)
     let cardName = String(cardValue + 2);
-    if (cardName == '14') {
+    if (cardName == '11') {
+      cardName = 'J'
+    } else if (cardName == '12') {
+      cardName = 'Q'
+    } else if (cardName == '13') {
+      cardName = 'K'
+    } else if (cardName == '14') {
       cardName = 'A'
     } else if (cardName == '15') {
       cardName = '2'

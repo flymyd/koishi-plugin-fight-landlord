@@ -1,6 +1,6 @@
 import {Context, Schema} from 'koishi'
 import {FightLandlordDetailExtends, FightLandlordDetailModel, FightLandlordRoomExtends} from "./types/DbTypes";
-import {autoQuitRoom, getJoinedRoom, getPlayerCount, quitRoom, resetDB} from "./DbUtils";
+import {autoQuitRoom, getJoinedRoom, getPlayerCount, getPlayingRoom, quitRoom, resetDB} from "./DbUtils";
 import {initCards, sortCards} from "./cardUtils";
 
 export const name = 'fight-landlord'
@@ -113,6 +113,7 @@ export function apply(ctx: Context) {
     }
     // 初始化对局详情, 房间状态设置为进行中
     room.status = 1;
+    await ctx.database.upsert('fightLandlordRoom', [room])
     const cards = initCards();
     // 随机一个幸运玩家当地主
     const randomLordIndex = Math.floor(Math.random() * 3) + 1;
@@ -132,8 +133,17 @@ export function apply(ctx: Context) {
     sortCards(currentRoomDetail['card' + randomLordIndex])
     // 初始化对局
     await ctx.database.create('fightLandlordDetail', currentRoomDetail)
-    res += `房间 ${room.id} 游戏开始！`
+    res += `房间 ${room.id} 游戏开始！\n`
+    res += `请 ${lord.name} 出牌`
     return res;
+  })
+  ctx.command('ddz.info', '查看手牌详情，私聊机器人使用以防露牌').action(async (_, card: string) => {
+    // 必须在一个已经开始的对局中
+    const playingRoomInfo = await getPlayingRoom(ctx, _)
+    if (playingRoomInfo) {
+      const previousCard: any = playingRoomInfo.previousCard;
+      return `身份: ${playingRoomInfo.role ? '地主' : '农民'}\n上家出牌: ${previousCard.length > 0 ? previousCard.map(o => o.cardName).join(' ') : '无'}\n手牌: ${playingRoomInfo.card}`
+    } else return '你必须在一个已经开始的对局中才能查看手牌。'
   })
   ctx.command('ddz.play', '进行出牌').action(async (_, card: string) => {
     // 必须在一个已经开始的对局中

@@ -18,6 +18,36 @@ export const getJoinedRoom = async (ctx: Context, _: any) => {
     ]
   });
 }
+// 查询是否已经在开始游戏的房间中
+export const getPlayingRoom = async (ctx: Context, _: any) => {
+  const {userId} = _.session.author;
+  const joinedRoomList = await ctx.database.get('fightLandlordRoom', {
+    $or: [
+      {player1: userId},
+      {player2: userId},
+      {player3: userId},
+    ]
+  });
+  if (joinedRoomList.length > 0) {
+    const roomId = joinedRoomList[0].id;
+    if (joinedRoomList[0].status) {
+      const detail = await ctx.database.get('fightLandlordDetail', {roomId})
+      const uKey = Object.entries(joinedRoomList[0])
+        .find(([key, value]) => value === userId)[0]
+        .replaceAll("player", "");
+      const detailInfo = detail[0];
+      const lordPlayer: any = detailInfo.lordPlayer;
+      return {
+        roomId,
+        detailId: detailInfo.id,
+        role: lordPlayer.id == userId,
+        previousCard: detailInfo.previousCard,
+        card: detailInfo['card' + uKey].map(o=>o.cardName).join(' ')
+      }
+    } else return ''
+  } else return ''
+}
+
 // 退出房间逻辑
 export const quitRoom = async (ctx: Context, room: FightLandlordRoomModel, userId: string) => {
   // 中止正在进行的对局
