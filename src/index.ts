@@ -13,11 +13,12 @@ export function apply(ctx: Context) {
   ctx.model.extend('fightLandlordRoom', FightLandlordRoomExtends)
   ctx.model.extend('fightLandlordDetail', FightLandlordDetailExtends)
   ctx.command('ddz.list', '列出当前可用的斗地主房间').action(async (_) => {
-    const list = await ctx.database.select('fightLandlordRoom')
+    const list = await ctx.database.get('fightLandlordRoom', {})
     return JSON.stringify(list)
   })
   ctx.command('ddz.create', '创建斗地主房间').action(async (_) => {
     // 查询是否已经在房间中，如果有则自动退出并成为新房间的房主
+    return JSON.stringify(_.session)
   })
   ctx.command('ddz.join', '加入斗地主房间').action(async (_, rid: string) => {
     // 不能加入人满和进行中的对局
