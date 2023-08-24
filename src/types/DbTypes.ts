@@ -27,8 +27,9 @@ export interface FightLandlordRoomModel {
   player2Name: string,
   player3: string,
   player3Name: string,
-  // 房主的uid
-  hostPlayer: string
+  // 房主的信息
+  hostPlayer: string,
+  hostPlayerName: string,
   // 状态 0 准备中 1 进行中
   status: number
 }
@@ -41,7 +42,8 @@ export const FightLandlordRoomExtends: Field.Extension = {
   player2Name: 'string',
   player3: 'string',
   player3Name: 'string',
-  hostPlayer: 'unsigned',
+  hostPlayer: 'string',
+  hostPlayerName: 'string',
   status: 'unsigned',
 }
 
