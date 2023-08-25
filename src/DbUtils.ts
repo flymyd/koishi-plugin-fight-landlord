@@ -44,7 +44,7 @@ export const getPlayingRoom = async (ctx: Context, _: any) => {
         role: lordPlayer.id == userId,
         previousPlayer: detailInfo.previousPlayer,
         lordPlayer: detailInfo.lordPlayer,
-        card: detailInfo['card' + uKey].map(o=>o.cardName).join(' '),
+        card: detailInfo['card' + uKey].map(o => o.cardName).join(' '),
         originDetail: detailInfo
       }
     } else return ''
@@ -52,21 +52,26 @@ export const getPlayingRoom = async (ctx: Context, _: any) => {
 }
 
 // 退出房间逻辑
-export const quitRoom = async (ctx: Context, room: FightLandlordRoomModel, userId: string) => {
+export const quitRoom = async (ctx: Context, room: FightLandlordRoomModel, userId: string, onlyReset?: boolean) => {
   // 中止正在进行的对局
   const roomDetail = await ctx.database.get('fightLandlordDetail', {roomId: room.id})
   if (roomDetail.length > 0) {
     await ctx.database.remove('fightLandlordDetail', [roomDetail[0].id])
   }
   // 用户是房主则直接解散该房间
-  if (room.hostPlayer == userId) {
-    await ctx.database.remove('fightLandlordRoom', [room.id])
+  if (!onlyReset) {
+    if (room.hostPlayer == userId) {
+      await ctx.database.remove('fightLandlordRoom', [room.id])
+    } else {
+      room.status = 0;
+      // 退出该房间
+      const uKey = Object.entries(room).find(([key, value]) => value === userId)[0];
+      room[uKey] = '';
+      room[uKey + 'Name'] = ''
+      await ctx.database.upsert('fightLandlordRoom', [room])
+    }
   } else {
-    // 退出该房间
     room.status = 0;
-    const uKey = Object.entries(room).find(([key, value]) => value === userId)[0];
-    room[uKey] = '';
-    room[uKey + 'Name'] = ''
     await ctx.database.upsert('fightLandlordRoom', [room])
   }
 }

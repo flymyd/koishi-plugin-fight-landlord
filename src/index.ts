@@ -179,10 +179,11 @@ export function apply(ctx: Context) {
         if (card) {
           let res = ''
           const npIndex = (Number(nextPlayerIndex) + 1) % 3;
+          const roomDetail = playingRoomInfo.originDetail
           // 本轮跳过
           if (card.includes('pass')) {
-            playingRoomInfo.originDetail.previousPlayer = {name: username, id: userId, num: Number(nextPlayerIndex) + 1}
-            await ctx.database.upsert('fightLandlordDetail', [playingRoomInfo.originDetail])
+            roomDetail.previousPlayer = {name: username, id: userId, num: Number(nextPlayerIndex) + 1}
+            await ctx.database.upsert('fightLandlordDetail', [roomDetail])
             return `${username} 跳过本轮, 请下家 ${room[players[npIndex] + 'Name']} 出牌。`
           }
           // 要出手的卡牌数组
@@ -194,20 +195,31 @@ export function apply(ctx: Context) {
             // 把待出的牌恢复成存储结构的牌组然后排序
             currentCardArr = parseArrToCards(currentCardArr);
             sortCards(currentCardArr)
+            const prevCard: any = roomDetail.previousCard;
             // TODO 上面的判断用来求card与playingRoomInfo.card的交集，交集排序后与card排序后不吻合则return
-            
+            console.log(currentCardArr, prevCard[0])
             // 出牌逻辑
-            const prevCard: any = playingRoomInfo.originDetail.previousCard;
             let canBeat;
             if (prevCard.length < 1) {
-              // 地主随便出
+              // 新对局 地主第一手随便出
               canBeat = true
             } else canBeat = canBeatPreviousCards(currentCardArr, prevCard[0])
             if (!canBeat) {
               return '你所出的牌不大于上家'
             } else {
-              // TODO 出牌成功逻辑： 播报剩余手牌, 刷新对局信息（下家、出牌、弃牌）
-              res += `剩余手牌数: `
+              // TODO 出牌成功逻辑：播报剩余手牌, 刷新对局信息（下家、出牌、弃牌）
+              console.log(nextPlayerIndex)
+              res += `出牌成功！堂子的牌面是: ${currentCardArr.map(o => o.cardName).join(' ')}\n`
+              res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${roomDetail['card' + (nextPlayerIndex + 1)].length - currentCardArr.length}\n`
+              res += `请 ${room['player' + (npIndex + 1) + 'Name']} 出牌。`
+              // @ts-ignore
+              roomDetail.usedCard = [...roomDetail.usedCard, ...currentCardArr];
+              // 如果弃牌堆长度为54则播报该玩家胜利，清空对局详情并将对局设置为准备中
+              // @ts-ignore
+              if (roomDetail.usedCard.length >= 54) {
+                await quitRoom(ctx, room, room['player' + (nextPlayerIndex + 1)], true)
+                return `玩家 ${room['player' + (nextPlayerIndex + 1) + 'Name']} 获胜！`
+              }
             }
           } else {
             return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大写字母J、Q、K、A及"大王"、"小王"。'
@@ -217,8 +229,10 @@ export function apply(ctx: Context) {
       } else return '还没轮到你出牌。'
     } else return '你必须在一个已经开始的对局中才能出牌。'
   })
-  ctx.command('ddz.reset', '重置全部').action(async (_) => {
+  ctx.command('ddz.reset', '重置全部斗地主房间').action(async (_) => {
     resetDB(ctx)
   })
-
+  ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => {
+    resetDB(ctx)
+  })
 }
