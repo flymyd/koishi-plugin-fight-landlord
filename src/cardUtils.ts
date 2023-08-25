@@ -73,6 +73,28 @@ export interface Card {
   cardName: string;
 }
 
+export const parseArrToCards = (cardArr: Array<string>) => {
+  return cardArr.map(o => {
+    let cardValue;
+    if (o == '大王') {
+      cardValue = 15;
+    } else if (o == '小王') {
+      cardValue = 14;
+    } else if (o == '2') {
+      cardValue = 13
+    } else if (o == 'A') {
+      cardValue = 12
+    } else if (o == 'K') {
+      cardValue = 11
+    } else if (o == 'Q') {
+      cardValue = 10
+    } else if (o == 'J') {
+      cardValue = 9
+    } else cardValue = Number(o) - 2;
+    return {cardValue, cardName: o}
+  })
+}
+
 enum CardType {
   Single = 1, // 单牌
   Pair = 2, // 对子（一对相同点数的牌）

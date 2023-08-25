@@ -1,7 +1,7 @@
 import {Context, Schema} from 'koishi'
 import {FightLandlordDetailExtends, FightLandlordDetailModel, FightLandlordRoomExtends} from "./types/DbTypes";
 import {autoQuitRoom, getJoinedRoom, getPlayerCount, getPlayingRoom, quitRoom, resetDB} from "./DbUtils";
-import {canBeatPreviousCards, Card, initCards, sortCards} from "./cardUtils";
+import {canBeatPreviousCards, Card, initCards, parseArrToCards, sortCards} from "./cardUtils";
 
 
 export const name = 'fight-landlord'
@@ -146,7 +146,7 @@ export function apply(ctx: Context) {
     // 必须在一个已经开始的对局中
     const playingRoomInfo = await getPlayingRoom(ctx, _)
     if (playingRoomInfo) {
-      const previousCard: any = playingRoomInfo.previousCard;
+      const previousCard: any = playingRoomInfo.originDetail.previousCard;
       // TODO 记牌器
       return `身份: ${playingRoomInfo.role ? '地主' : '农民'}\n上家出牌: ${previousCard.length > 0 ? previousCard.map(o => o.cardName).join(' ') : '无'}\n手牌: ${playingRoomInfo.card}`
     } else return '你必须在一个已经开始的对局中才能查看手牌。'
@@ -186,21 +186,29 @@ export function apply(ctx: Context) {
             return `${username} 跳过本轮, 请下家 ${room[players[npIndex] + 'Name']} 出牌。`
           }
           // 要出手的卡牌数组
-          let currentCardArr = card.split(" ");
+          let currentCardArr: Array<any> = card.split(" ");
           let isCurrentCardArrValid = currentCardArr
             .every(v => ['大王', '小王', 'J', 'Q', 'K', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10']
               .includes(v));
           if (isCurrentCardArrValid) {
-            // TODO 把待出的牌恢复成存储结构的牌组然后排序
-            sortCards()
+            // 把待出的牌恢复成存储结构的牌组然后排序
+            currentCardArr = parseArrToCards(currentCardArr);
+            sortCards(currentCardArr)
             // TODO 上面的判断用来求card与playingRoomInfo.card的交集，交集排序后与card排序后不吻合则return
-            // 否则将排序后的card参数设置为wantCard
-
-
-            // TODO 出牌逻辑
-
-            // TODO 播报剩余手牌
-            res += `剩余手牌数: `
+            
+            // 出牌逻辑
+            const prevCard: any = playingRoomInfo.originDetail.previousCard;
+            let canBeat;
+            if (prevCard.length < 1) {
+              // 地主随便出
+              canBeat = true
+            } else canBeat = canBeatPreviousCards(currentCardArr, prevCard[0])
+            if (!canBeat) {
+              return '你所出的牌不大于上家'
+            } else {
+              // TODO 出牌成功逻辑： 播报剩余手牌, 刷新对局信息（下家、出牌、弃牌）
+              res += `剩余手牌数: `
+            }
           } else {
             return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大写字母J、Q、K、A及"大王"、"小王"。'
           }
@@ -212,17 +220,5 @@ export function apply(ctx: Context) {
   ctx.command('ddz.reset', '重置全部').action(async (_) => {
     resetDB(ctx)
   })
-  ctx.command('ddz.test', '测试牌').action(async (_) => {
-    // 使用示例
-    const previousCards: Card[] = [
-      {cardValue: 5, cardName: '7'}
-    ];
 
-    const currentCards: Card[] = [
-      {cardValue: 6, cardName: '8'}
-    ];
-    return canBeatPreviousCards(currentCards, previousCards)
-    // const info = await ctx.database.get('fightLandlordDetail', {roomId: 1});
-    // return JSON.stringify(info)
-  })
 }

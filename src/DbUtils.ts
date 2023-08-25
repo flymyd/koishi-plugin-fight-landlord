@@ -42,7 +42,6 @@ export const getPlayingRoom = async (ctx: Context, _: any) => {
         roomId,
         detailId: detailInfo.id,
         role: lordPlayer.id == userId,
-        previousCard: detailInfo.previousCard,
         previousPlayer: detailInfo.previousPlayer,
         lordPlayer: detailInfo.lordPlayer,
         card: detailInfo['card' + uKey].map(o=>o.cardName).join(' '),
