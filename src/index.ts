@@ -261,6 +261,23 @@ export function apply(ctx: Context) {
   ctx.command('ddz.reset', '重置全部斗地主房间').action(async (_) => {
     resetDB(ctx)
   })
+  ctx.command('ddz.rule', '查看适用的斗地主出牌规则').action(async (_) => {
+    let res = [];
+    res.push('单牌');
+    res.push('对子（一对相同点数的牌）');
+    res.push('三张相同点数的牌');
+    res.push('三带一（三张相同点数的牌 + 单牌）');
+    res.push('三带一对（三张相同点数的牌 + 一对）');
+    res.push('顺子（连续的五张或更多点数相邻的牌）');
+    res.push('连对（连续的两对或更多对点数相邻的牌）');
+    res.push('飞机不带翅膀（连续的两个或更多个三张相同点数的牌）');
+    res.push('飞机带单牌（连续的两个或更多个三张相同点数的牌 + 相同数量的单牌）');
+    res.push('飞机带对子（连续的两个或更多个三张相同点数的牌 + 相同数量的对子）');
+    res.push('炸弹（四张点数相同的牌）');
+    res.push('王炸（即大王+小王）');
+    res.push('无效牌型（不符合任何有效牌型规则）');
+    return res.join("\n")
+  })
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => {
     let res = [];
     res.push('ddz.list: 列出当前可用的斗地主房间')
@@ -269,8 +286,9 @@ export function apply(ctx: Context) {
     res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
     res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
     res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大写字母和小王、大王两个中文词。不接则输入pass。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play pass')
-    res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
     res.push('ddz.quit 退出斗地主房间。如果游戏正在进行中，该对局将会中止；如果你是房主，所在房间将会被直接解散。')
+    res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
+    res.push('ddz.rule: 查看适用的斗地主出牌规则')
     return res.join("\n")
   })
 }
