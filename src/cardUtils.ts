@@ -66,3 +66,236 @@ export const initCards = () => {
     card1, card2, card3, holeCards
   }
 }
+
+
+export interface Card {
+  cardValue: number;
+  cardName: string;
+}
+
+enum CardType {
+  Single = 1, // 单牌
+  Pair = 2, // 对子（一对相同点数的牌）
+  ThreeOfAKind = 3, // 三张相同点数的牌
+  ThreeWithSingle = 4, // 三带一（三张相同点数的牌 + 单牌）
+  ThreeWithPair = 5, // 三带一对（三张相同点数的牌 + 一对）
+  Straight = 6, // 顺子（连续的五张或更多点数相邻的牌）
+  DoubleStraight = 7, // 连对（连续的两对或更多对点数相邻的牌）
+  TripleStraight = 8, // 飞机不带翅膀（连续的两个或更多个三张相同点数的牌）
+  TripleStraightWithSingle = 9, // 飞机带单牌（连续的两个或更多个三张相同点数的牌 + 相同数量的单牌）
+  TripleStraightWithPair = 10, // 飞机带对子（连续的两个或更多个三张相同点数的牌 + 相同数量的对子）
+  Bomb = 11, // 炸弹（四张点数相同的牌）
+  JokerBomb = 12, // 王炸（即大王+小王）
+  Invalid = 13, // 无效牌型（不符合任何有效牌型规则）
+}
+
+function getCardType(cards: Card[]): CardType {
+  const length = cards.length;
+
+  if (length === 1) {
+    return CardType.Single;
+  } else if (length === 2 && isJokerBomb(cards)) {
+    return CardType.JokerBomb;
+  } else if (length === 4 && isBomb(cards)) {
+    return CardType.Bomb;
+  } else if (length === 3) {
+    return isThreeOfAKind(cards) ? CardType.ThreeOfAKind : CardType.Invalid;
+  } else if (length === 4) {
+    if (isThreeWithSingle(cards)) {
+      return CardType.ThreeWithSingle;
+    } else if (isThreeWithPair(cards)) {
+      return CardType.ThreeWithPair;
+    } else {
+      return CardType.Invalid;
+    }
+  } else if (length >= 5) {
+    if (isStraight(cards)) {
+      return CardType.Straight;
+    } else if (isDoubleStraight(cards)) {
+      return CardType.DoubleStraight;
+    } else if (isTripleStraight(cards)) {
+      if (isTripleStraightWithSingle(cards)) {
+        return CardType.TripleStraightWithSingle;
+      } else if (isTripleStraightWithPair(cards)) {
+        return CardType.TripleStraightWithPair;
+      } else {
+        return CardType.TripleStraight;
+      }
+    } else {
+      return CardType.Invalid;
+    }
+  } else {
+    return CardType.Invalid;
+  }
+}
+
+function isJokerBomb(cards: Card[]): boolean {
+  return cards.every(card => card.cardValue === 14 || card.cardValue === 15);
+}
+
+function isBomb(cards: Card[]): boolean {
+  return cards.every(card => card.cardValue === cards[0].cardValue);
+}
+
+function isThreeOfAKind(cards: Card[]): boolean {
+  return cards.every(card => card.cardValue === cards[0].cardValue);
+}
+
+function isThreeWithSingle(cards: Card[]): boolean {
+  const cardCountMap = countCards(cards);
+  const values = Object.values(cardCountMap);
+
+  return (
+    values.length === 2 &&
+    (values[0] === 3 || values[1] === 3) &&
+    cards.length === 4
+  );
+}
+
+function isThreeWithPair(cards: Card[]): boolean {
+  const cardCountMap = countCards(cards);
+  const values = Object.values(cardCountMap);
+
+  return (
+    values.length === 2 &&
+    (values[0] === 3 || values[1] === 3) &&
+    cards.length === 5
+  );
+}
+
+function isStraight(cards: Card[]): boolean {
+  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+
+  for (let i = 0; i < sortedCards.length - 1; i++) {
+    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 1].cardValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isDoubleStraight(cards: Card[]): boolean {
+  if (cards.length % 2 !== 0) {
+    return false;
+  }
+
+  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+
+  for (let i = 0; i < sortedCards.length; i += 2) {
+    if (sortedCards[i].cardValue !== sortedCards[i + 1].cardValue) {
+      return false;
+    }
+  }
+
+  for (let i = 0; i < sortedCards.length - 2; i += 2) {
+    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 2].cardValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isTripleStraight(cards: Card[]): boolean {
+  if (cards.length % 3 !== 0) {
+    return false;
+  }
+
+  const cardCountMap = countCards(cards);
+  const values = Object.values(cardCountMap);
+
+  if (values.length !== 1 || values[0] !== 3) {
+    return false;
+  }
+
+  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+
+  for (let i = 0; i < sortedCards.length - 3; i += 3) {
+    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isTripleStraightWithSingle(cards: Card[]): boolean {
+  if (cards.length % 4 !== 0) {
+    return false;
+  }
+
+  const cardCountMap = countCards(cards);
+  const values = Object.values(cardCountMap);
+
+  if (values.length !== 2 || (values[0] !== 3 && values[1] !== 3)) {
+    return false;
+  }
+
+  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+
+  for (let i = 0; i < sortedCards.length - 3; i += 4) {
+    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isTripleStraightWithPair(cards: Card[]): boolean {
+  if (cards.length % 5 !== 0) {
+    return false;
+  }
+
+  const cardCountMap = countCards(cards);
+  const values = Object.values(cardCountMap);
+
+  if (values.length !== 2 || (values[0] !== 3 && values[1] !== 3)) {
+    return false;
+  }
+
+  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+
+  for (let i = 0; i < sortedCards.length - 3; i += 5) {
+    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function countCards(cards: Card[]): { [cardValue: number]: number } {
+  const cardCountMap: { [cardValue: number]: number } = {};
+
+  for (const card of cards) {
+    if (cardCountMap.hasOwnProperty(card.cardValue)) {
+      cardCountMap[card.cardValue]++;
+    } else {
+      cardCountMap[card.cardValue] = 1;
+    }
+  }
+
+  return cardCountMap;
+}
+
+// 判断待出的牌能否管住上家的牌
+export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]): boolean {
+  const currentCardType = getCardType(currentCards);
+  const previousCardType = getCardType(previousCards);
+
+  if (currentCardType === CardType.Invalid) {
+    return false;
+  } else if (currentCardType === CardType.JokerBomb) {
+    return true;
+  } else if (currentCardType === CardType.Bomb && previousCardType !== CardType.JokerBomb) {
+    return true;
+  } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
+    if (currentCards[currentCards.length - 1].cardValue > previousCards[previousCards.length - 1].cardValue) {
+      return true;
+    }
+  }
+
+  return false;
+}

@@ -57,9 +57,9 @@ export interface FightLandlordDetailModel {
   card1: object,
   card2: object,
   card3: object,
-  // 地主信息 name: 昵称, id: uid
+  // 地主信息 name: 昵称, id: uid, num: 玩家序号
   lordPlayer: object,
-  // 上家信息 name: 昵称, id: uid
+  // 上家信息 name: 昵称, id: uid, num: 玩家序号
   previousPlayer: object,
   // 上家出牌
   previousCard: object,
