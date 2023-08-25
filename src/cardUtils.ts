@@ -111,7 +111,7 @@ enum CardType {
   Invalid = 13, // 无效牌型（不符合任何有效牌型规则）
 }
 
-function getCardType(cards: Card[]): CardType {
+export function getCardType(cards: Card[]): CardType {
   const length = cards.length;
 
   if (length === 1) {
@@ -306,7 +306,6 @@ function countCards(cards: Card[]): { [cardValue: number]: number } {
 export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]): boolean {
   const currentCardType = getCardType(currentCards);
   const previousCardType = getCardType(previousCards);
-
   if (currentCardType === CardType.Invalid) {
     return false;
   } else if (currentCardType === CardType.JokerBomb) {
@@ -314,7 +313,8 @@ export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]
   } else if (currentCardType === CardType.Bomb && previousCardType !== CardType.JokerBomb) {
     return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
-    if (currentCards[currentCards.length - 1].cardValue > previousCards[previousCards.length - 1].cardValue) {
+    console.log(currentCards, previousCards)
+    if (currentCards[0].cardValue > previousCards[0].cardValue) {
       return true;
     }
   }

@@ -63,6 +63,8 @@ export interface FightLandlordDetailModel {
   previousPlayer: object,
   // 上家出牌
   previousCard: object,
+  // 堂主
+  previousCardHolder: string,
   // 弃牌堆
   usedCard: object
 }
@@ -76,5 +78,6 @@ export const FightLandlordDetailExtends: Field.Extension = {
   previousPlayer: 'json',
   lordPlayer: 'json',
   previousCard: 'json',
+  previousCardHolder: 'string',
   usedCard: 'json'
 }

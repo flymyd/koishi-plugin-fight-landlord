@@ -1,7 +1,7 @@
 import {Context, Schema} from 'koishi'
 import {FightLandlordDetailExtends, FightLandlordDetailModel, FightLandlordRoomExtends} from "./types/DbTypes";
 import {autoQuitRoom, getJoinedRoom, getPlayerCount, getPlayingRoom, quitRoom, resetDB} from "./DbUtils";
-import {canBeatPreviousCards, Card, initCards, parseArrToCards, sortCards} from "./cardUtils";
+import {canBeatPreviousCards, Card, getCardType, initCards, parseArrToCards, sortCards} from "./cardUtils";
 
 
 export const name = 'fight-landlord'
@@ -168,7 +168,7 @@ export function apply(ctx: Context) {
       let canCurrentUserPlay;
       if (!previousPlayer) {
         const lordPlayer: any = playingRoomInfo.lordPlayer;
-        nextPlayerIndex = Number(lordPlayer.num) % 3 - 1;
+        nextPlayerIndex = (Number(lordPlayer.num) - 1) % 3;
         canCurrentUserPlay = userId == lordPlayer.id;
       } else {
         const previousNum = previousPlayer.num;
@@ -195,19 +195,27 @@ export function apply(ctx: Context) {
             // 把待出的牌恢复成存储结构的牌组然后排序
             currentCardArr = parseArrToCards(currentCardArr);
             sortCards(currentCardArr)
+            // 堂子牌
             const prevCard: any = roomDetail.previousCard;
+            sortCards(prevCard)
+            // 当前手牌
+            const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
             // TODO 上面的判断用来求card与playingRoomInfo.card的交集，交集排序后与card排序后不吻合则return
-            console.log(currentCardArr, prevCard[0])
+            // console.log('currentCardArr', currentCardArr)
+            // console.log('prevCard', prevCard)
             // 出牌逻辑
             let canBeat;
             if (prevCard.length < 1) {
               // 新对局 地主第一手随便出
-              canBeat = true
-            } else canBeat = canBeatPreviousCards(currentCardArr, prevCard[0])
+              canBeat = getCardType(currentCardArr) != 13;
+            } else if (roomDetail.previousCardHolder == userId) {
+              // 其他两人都过 轮到自己 也随便出
+              canBeat = getCardType(currentCardArr) != 13;
+            } else canBeat = canBeatPreviousCards(currentCardArr, prevCard)
             if (!canBeat) {
-              return '你所出的牌不大于上家'
+              return '你所出的牌不大于上家或不符合出牌规则'
             } else {
-              // TODO 出牌成功逻辑：播报剩余手牌, 刷新对局信息（下家、出牌、弃牌）
+              // 出牌成功逻辑：播报剩余手牌, 刷新对局信息（上家、堂子、弃牌）
               console.log(nextPlayerIndex)
               res += `出牌成功！堂子的牌面是: ${currentCardArr.map(o => o.cardName).join(' ')}\n`
               res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${roomDetail['card' + (nextPlayerIndex + 1)].length - currentCardArr.length}\n`
@@ -219,6 +227,17 @@ export function apply(ctx: Context) {
               if (roomDetail.usedCard.length >= 54) {
                 await quitRoom(ctx, room, room['player' + (nextPlayerIndex + 1)], true)
                 return `玩家 ${room['player' + (nextPlayerIndex + 1) + 'Name']} 获胜！`
+              } else {
+                roomDetail.previousPlayer = {name: username, id: userId, num: nextPlayerIndex + 1}
+                // @ts-ignore
+                roomDetail.previousCard = [...currentCardArr]
+                roomDetail.previousCardHolder = room['player' + (nextPlayerIndex + 1)];
+                // 把打出的牌移走
+                const newHand = originalHand.filter(card => {
+                  return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
+                });
+                roomDetail['card' + (nextPlayerIndex + 1)] = [...newHand]
+                await ctx.database.upsert('fightLandlordDetail', [roomDetail])
               }
             }
           } else {
@@ -234,5 +253,9 @@ export function apply(ctx: Context) {
   })
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => {
     resetDB(ctx)
+  })
+  ctx.command('ddz.test', 'test').action(async (_) => {
+    const test = await ctx.database.get('fightLandlordDetail', 1)
+    return JSON.stringify(test)
   })
 }
