@@ -1,0 +1,36 @@
+{
+  "name": "koishi-plugin-fight-landlord",
+  "description": "koishi斗地主游戏",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "contributors": [
+    "flymyd <flymyd@foxmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/flymyd/koishi-plugin-fight-landlord",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flymyd/koishi-plugin-fight-landlord.git"
+  },
+  "scripts": {},
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin",
+    "斗地主"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.14.1"
+  },
+  "koishi": {
+    "description": {
+      "zh": "koishi斗地主游戏"
+    },
+    "locales": ["zh"]
+  }
+}
