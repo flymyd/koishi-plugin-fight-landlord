@@ -200,9 +200,11 @@ export function apply(ctx: Context) {
             sortCards(prevCard)
             // 当前手牌
             const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
-            // TODO 上面的判断用来求card与playingRoomInfo.card的交集，交集排序后与card排序后不吻合则return
-            // console.log('currentCardArr', currentCardArr)
-            // console.log('prevCard', prevCard)
+            // 判断手牌是否包含待出的牌
+            const containsPlayedCards = currentCardArr.every(playedCard => originalHand.some(handCard => handCard.cardValue === playedCard.cardValue));
+            if (!containsPlayedCards) {
+              return '你不能出自己没有的牌。'
+            }
             // 出牌逻辑
             let canBeat;
             if (prevCard.length < 1) {
