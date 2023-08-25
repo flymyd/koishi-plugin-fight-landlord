@@ -118,6 +118,8 @@ export function getCardType(cards: Card[]): CardType {
     return CardType.Single;
   } else if (length === 2 && isJokerBomb(cards)) {
     return CardType.JokerBomb;
+  } else if (length === 2 && isPair(cards)) {
+    return CardType.Pair;
   } else if (length === 4 && isBomb(cards)) {
     return CardType.Bomb;
   } else if (length === 3) {
@@ -125,14 +127,14 @@ export function getCardType(cards: Card[]): CardType {
   } else if (length === 4) {
     if (isThreeWithSingle(cards)) {
       return CardType.ThreeWithSingle;
-    } else if (isThreeWithPair(cards)) {
-      return CardType.ThreeWithPair;
     } else {
       return CardType.Invalid;
     }
   } else if (length >= 5) {
     if (isStraight(cards)) {
       return CardType.Straight;
+    } else if (isThreeWithPair(cards)) {
+      return CardType.ThreeWithPair;
     } else if (isDoubleStraight(cards)) {
       return CardType.DoubleStraight;
     } else if (isTripleStraight(cards)) {
@@ -160,6 +162,10 @@ function isBomb(cards: Card[]): boolean {
 }
 
 function isThreeOfAKind(cards: Card[]): boolean {
+  return cards.every(card => card.cardValue === cards[0].cardValue);
+}
+
+function isPair(cards: Card[]): boolean {
   return cards.every(card => card.cardValue === cards[0].cardValue);
 }
 

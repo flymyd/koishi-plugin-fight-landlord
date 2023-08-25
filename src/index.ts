@@ -201,14 +201,22 @@ export function apply(ctx: Context) {
             // 当前手牌
             const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
             // 判断手牌是否包含待出的牌
-            const containsPlayedCards = currentCardArr.every(playedCard => originalHand.some(handCard => handCard.cardValue === playedCard.cardValue));
+            const containsPlayedCards = currentCardArr.every(playedCard => {
+              const matchingCardIndex = originalHand.findIndex(handCard => handCard.cardValue === playedCard.cardValue);
+              if (matchingCardIndex !== -1) {
+                originalHand.splice(matchingCardIndex, 1);
+                return true;
+              } else {
+                return false;
+              }
+            });
             if (!containsPlayedCards) {
               return '你不能出自己没有的牌。'
             }
             // 出牌逻辑
             let canBeat;
             if (prevCard.length < 1) {
-              // 新对局 地主第一手随便出
+              // 第一手随便出
               canBeat = getCardType(currentCardArr) != 13;
             } else if (roomDetail.previousCardHolder == userId) {
               // 其他两人都过 轮到自己 也随便出
@@ -218,27 +226,27 @@ export function apply(ctx: Context) {
               return '你所出的牌不大于上家或不符合出牌规则'
             } else {
               // 出牌成功逻辑：播报剩余手牌, 刷新对局信息（上家、堂子、弃牌）
-              console.log(nextPlayerIndex)
               res += `出牌成功！堂子的牌面是: ${currentCardArr.map(o => o.cardName).join(' ')}\n`
-              res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${roomDetail['card' + (nextPlayerIndex + 1)].length - currentCardArr.length}\n`
+              res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${roomDetail['card' + (nextPlayerIndex + 1)].length}\n`
               res += `请 ${room['player' + (npIndex + 1) + 'Name']} 出牌。`
               // @ts-ignore
               roomDetail.usedCard = [...roomDetail.usedCard, ...currentCardArr];
-              // 如果弃牌堆长度为54则播报该玩家胜利，清空对局详情并将对局设置为准备中
+              roomDetail.previousPlayer = {name: username, id: userId, num: nextPlayerIndex + 1}
               // @ts-ignore
-              if (roomDetail.usedCard.length >= 54) {
+              roomDetail.previousCard = [...currentCardArr]
+              roomDetail.previousCardHolder = room['player' + (nextPlayerIndex + 1)];
+              // 把打出的牌移走
+              const newHand = originalHand.filter(card => {
+                return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
+              });
+              console.log(newHand)
+              roomDetail['card' + (nextPlayerIndex + 1)] = [...newHand]
+              // 如果该玩家手牌剩余0则播报该玩家胜利，清空对局详情并将对局设置为准备中
+              // @ts-ignore
+              if (newHand.length < 1) {
                 await quitRoom(ctx, room, room['player' + (nextPlayerIndex + 1)], true)
                 return `玩家 ${room['player' + (nextPlayerIndex + 1) + 'Name']} 获胜！`
               } else {
-                roomDetail.previousPlayer = {name: username, id: userId, num: nextPlayerIndex + 1}
-                // @ts-ignore
-                roomDetail.previousCard = [...currentCardArr]
-                roomDetail.previousCardHolder = room['player' + (nextPlayerIndex + 1)];
-                // 把打出的牌移走
-                const newHand = originalHand.filter(card => {
-                  return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
-                });
-                roomDetail['card' + (nextPlayerIndex + 1)] = [...newHand]
                 await ctx.database.upsert('fightLandlordDetail', [roomDetail])
               }
             }
@@ -254,10 +262,15 @@ export function apply(ctx: Context) {
     resetDB(ctx)
   })
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => {
-    resetDB(ctx)
-  })
-  ctx.command('ddz.test', 'test').action(async (_) => {
-    const test = await ctx.database.get('fightLandlordDetail', 1)
-    return JSON.stringify(test)
+    let res = [];
+    res.push('ddz.list: 列出当前可用的斗地主房间')
+    res.push('ddz.create: 创建一个新的斗地主房间')
+    res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 114')
+    res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
+    res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
+    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大写字母和小王、大王两个中文词。不接则输入pass。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play pass')
+    res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
+    res.push('ddz.quit 退出斗地主房间。如果游戏正在进行中，该对局将会中止；如果你是房主，所在房间将会被直接解散。')
+    return res.join("\n")
   })
 }
