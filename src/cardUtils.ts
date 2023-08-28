@@ -15,25 +15,39 @@ export function sortCards(arr) {
 
 // 初始化牌局
 export const initCards = () => {
-  const originCardHeap = [{cardValue: 14, cardName: '小王'}, {
-    cardValue: 15,
-    cardName: '大王'
-  }, ...Array.from({length: 13 * 4}, (_, index) => {
-    const cardValue = Math.ceil((index + 1) / 4)
-    let cardName = String(cardValue + 2);
-    if (cardName == '11') {
-      cardName = 'J'
-    } else if (cardName == '12') {
-      cardName = 'Q'
-    } else if (cardName == '13') {
-      cardName = 'K'
-    } else if (cardName == '14') {
-      cardName = 'A'
-    } else if (cardName == '15') {
-      cardName = '2'
-    }
-    return {cardValue, cardName}
-  })]
+  const originCardHeap = [
+    { cardValue: 14, cardName: '小王', cardColor: 'A' },
+    { cardValue: 15, cardName: '大王', cardColor: 'A' },
+    ...Array.from({ length: 13 * 4 }, (_, index) => {
+      const cardValue = Math.ceil((index + 1) / 4);
+      let cardName = String(cardValue + 2);
+      let cardColor;
+
+      if (cardName == '11') {
+        cardName = 'J';
+      } else if (cardName == '12') {
+        cardName = 'Q';
+      } else if (cardName == '13') {
+        cardName = 'K';
+      } else if (cardName == '14') {
+        cardName = 'A';
+      } else if (cardName == '15') {
+        cardName = '2';
+      }
+
+      if (index % 4 === 0) {
+        cardColor = 'A';
+      } else if (index % 4 === 1) {
+        cardColor = 'B';
+      } else if (index % 4 === 2) {
+        cardColor = 'C';
+      } else if (index % 4 === 3) {
+        cardColor = 'D';
+      }
+
+      return { cardValue, cardName, cardColor };
+    })
+  ];
 
   function shuffleCards(arr) {
     arr = JSON.parse(JSON.stringify(arr));
@@ -71,6 +85,7 @@ export const initCards = () => {
 export interface Card {
   cardValue: number;
   cardName: string;
+  cardColor: string
 }
 
 export const parseArrToCards = (cardArr: Array<string>) => {

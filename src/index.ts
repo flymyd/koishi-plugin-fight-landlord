@@ -246,8 +246,11 @@ export function apply(ctx: Context) {
               roomDetail.previousCard = [...currentCardArr]
               roomDetail.previousCardHolder = room['player' + (nextPlayerIndex + 1)];
               // 把打出的牌移走
+              // const newHand = originalHand.filter(card => {
+              //   return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
+              // });
               const newHand = originalHand.filter(card => {
-                return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
+                return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue && playedCard.cardColor == card.cardColor);
               });
               roomDetail['card' + (nextPlayerIndex + 1)] = [...newHand]
               // 如果该玩家手牌剩余0则播报该玩家胜利，清空对局详情并将对局设置为准备中
