@@ -2,8 +2,10 @@ import {FightLandlordDetailExtends, FightLandlordRoomExtends, FightLandlordRoomM
 import {Context} from "koishi";
 
 export const resetDB = async (ctx: Context) => {
-  await ctx.database.drop('fightLandlordRoom')
-  await ctx.database.drop('fightLandlordDetail')
+  try {
+    await ctx.database.drop('fightLandlordRoom')
+    await ctx.database.drop('fightLandlordDetail')
+  } catch (e) {}
   await ctx.model.extend('fightLandlordRoom', FightLandlordRoomExtends)
   await ctx.model.extend('fightLandlordDetail', FightLandlordDetailExtends)
 }

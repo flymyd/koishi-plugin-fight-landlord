@@ -14,8 +14,7 @@ export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
   // 插件重启时总是重置牌局
-  // TODO prod时记得打开
-  // resetDB(ctx)
+  resetDB(ctx)
 
   ctx.command('ddz.list', '列出当前可用的斗地主房间').action(async (_) => {
     const list = await ctx.database.get('fightLandlordRoom', {})
@@ -147,11 +146,22 @@ export function apply(ctx: Context) {
     const playingRoomInfo = await getPlayingRoom(ctx, _)
     if (playingRoomInfo) {
       const previousCard: any = playingRoomInfo.originDetail.previousCard;
-      // TODO 记牌器
-      return `身份: ${playingRoomInfo.role ? '地主' : '农民'}\n上家出牌: ${previousCard.length > 0 ? previousCard.map(o => o.cardName).join(' ') : '无'}\n手牌: ${playingRoomInfo.card}`
+      // 记牌器
+      const usedCard: any = playingRoomInfo.originDetail.usedCard;
+      sortCards(usedCard)
+      const groupedCards = usedCard.reduce((acc, card) => {
+        if (acc[card.cardName]) {
+          acc[card.cardName]++;
+        } else {
+          acc[card.cardName] = 1;
+        }
+        return acc;
+      }, {});
+      const recorder = Object.keys(groupedCards).length > 0 ? Object.keys(groupedCards).map(k => k + "*" + groupedCards[k]).join(" ") : '无'
+      return `身份: ${playingRoomInfo.role ? '地主' : '农民'}\n上家出牌: ${previousCard.length > 0 ? previousCard.map(o => o.cardName).join(' ') : '无'}\n记牌器：${recorder}\n手牌: ${playingRoomInfo.card}`
     } else return '你必须在一个已经开始的对局中才能查看手牌。'
   })
-  ctx.command('ddz.play <message:text>', '进行出牌，输入牌名，以空格分割。不接则输入pass').action(async (_, card: string) => {
+  ctx.command('ddz.play <message:text>', '进行出牌，输入牌名，以空格分割。不接则输入"过"').action(async (_, card: string) => {
     // 必须在一个已经开始的对局中
     const playingRoomInfo = await getPlayingRoom(ctx, _)
     if (playingRoomInfo) {
@@ -181,7 +191,7 @@ export function apply(ctx: Context) {
           const npIndex = (Number(nextPlayerIndex) + 1) % 3;
           const roomDetail = playingRoomInfo.originDetail
           // 本轮跳过
-          if (card.includes('pass')) {
+          if (card.includes('过')) {
             roomDetail.previousPlayer = {name: username, id: userId, num: Number(nextPlayerIndex) + 1}
             await ctx.database.upsert('fightLandlordDetail', [roomDetail])
             return `${username} 跳过本轮, 请下家 ${room[players[npIndex] + 'Name']} 出牌。`
@@ -239,7 +249,6 @@ export function apply(ctx: Context) {
               const newHand = originalHand.filter(card => {
                 return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
               });
-              console.log(newHand)
               roomDetail['card' + (nextPlayerIndex + 1)] = [...newHand]
               // 如果该玩家手牌剩余0则播报该玩家胜利，清空对局详情并将对局设置为准备中
               // @ts-ignore
@@ -254,7 +263,7 @@ export function apply(ctx: Context) {
             return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大写字母J、Q、K、A及"大王"、"小王"。'
           }
           return res;
-        } else return '请输入要出的牌或pass以跳过本轮。'
+        } else return '请输入要出的牌或输入"过"以跳过本轮。'
       } else return '还没轮到你出牌。'
     } else return '你必须在一个已经开始的对局中才能出牌。'
   })
@@ -285,7 +294,7 @@ export function apply(ctx: Context) {
     res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 114')
     res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
     res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
-    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大写字母和小王、大王两个中文词。不接则输入pass。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play pass')
+    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大写字母和小王、大王两个中文词。不接则输入"过"。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play 过')
     res.push('ddz.quit 退出斗地主房间。如果游戏正在进行中，该对局将会中止；如果你是房主，所在房间将会被直接解散。')
     res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
     res.push('ddz.rule: 查看适用的斗地主出牌规则')

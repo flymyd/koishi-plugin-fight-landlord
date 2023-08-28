@@ -319,7 +319,6 @@ export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]
   } else if (currentCardType === CardType.Bomb && previousCardType !== CardType.JokerBomb) {
     return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
-    console.log(currentCards, previousCards)
     if (currentCards[0].cardValue > previousCards[0].cardValue) {
       return true;
     }
