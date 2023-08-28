@@ -300,4 +300,18 @@ export function apply(ctx: Context) {
     res.push('ddz.rule: 查看适用的斗地主出牌规则')
     return res.join("\n")
   })
+  ctx.command('ddz.test').action(async (_) => {
+    const card = [
+      {cardValue: 4, cardName: '6'},
+      {cardValue: 4, cardName: '6'},
+      {cardValue: 4, cardName: '6'},
+      {cardValue: 3, cardName: '5'},
+      {cardValue: 3, cardName: '5'},
+      {cardValue: 3, cardName: '5'},
+      {cardValue: 1, cardName: '3'},
+      {cardValue: 2, cardName: '4'},
+    ]
+    sortCards(card)
+    console.log(getCardType(card))
+  })
 }

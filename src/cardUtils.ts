@@ -138,13 +138,11 @@ export function getCardType(cards: Card[]): CardType {
     } else if (isDoubleStraight(cards)) {
       return CardType.DoubleStraight;
     } else if (isTripleStraight(cards)) {
-      if (isTripleStraightWithSingle(cards)) {
-        return CardType.TripleStraightWithSingle;
-      } else if (isTripleStraightWithPair(cards)) {
-        return CardType.TripleStraightWithPair;
-      } else {
-        return CardType.TripleStraight;
-      }
+      return CardType.TripleStraight;
+    } else if (isTripleStraightWithSingle(cards)) {
+      return CardType.TripleStraightWithSingle;
+    } else if (isTripleStraightWithPair(cards)) {
+      return CardType.TripleStraightWithPair;
     } else {
       return CardType.Invalid;
     }
@@ -248,46 +246,63 @@ function isTripleStraight(cards: Card[]): boolean {
   return true;
 }
 
+// 飞机带单牌（连续的两个或更多个三张相同点数的牌 + 相同数量的单牌）
+// 如：3 3 3 4 4 4 7 9
 function isTripleStraightWithSingle(cards: Card[]): boolean {
-  if (cards.length % 4 !== 0) {
-    return false;
-  }
-
   const cardCountMap = countCards(cards);
-  const values = Object.values(cardCountMap);
+  const tripleCards = [];
+  const singleCards = [];
 
-  if (values.length !== 2 || (values[0] !== 3 && values[1] !== 3)) {
-    return false;
+  for (const cardValue in cardCountMap) {
+    if (cardCountMap[cardValue] === 3) {
+      tripleCards.push(parseInt(cardValue));
+    } else if (cardCountMap[cardValue] === 1) {
+      singleCards.push(parseInt(cardValue));
+    } else {
+      return false; // 非法输入
+    }
   }
 
-  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+  if (tripleCards.length !== singleCards.length) {
+    return false; // 飞机牌和单牌数量不匹配
+  }
 
-  for (let i = 0; i < sortedCards.length - 3; i += 4) {
-    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
-      return false;
+  tripleCards.sort((a, b) => a - b);
+
+  for (let i = 0; i < tripleCards.length - 1; i++) {
+    if (tripleCards[i + 1] - tripleCards[i] !== 1) {
+      return false; // 飞机牌不连续
     }
   }
 
   return true;
 }
 
+// 飞机带对子（连续的两个或更多个三张相同点数的牌 + 相同数量的对子）
 function isTripleStraightWithPair(cards: Card[]): boolean {
-  if (cards.length % 5 !== 0) {
-    return false;
-  }
-
   const cardCountMap = countCards(cards);
-  const values = Object.values(cardCountMap);
+  const tripleCards = [];
+  const pairCards = [];
 
-  if (values.length !== 2 || (values[0] !== 3 && values[1] !== 3)) {
-    return false;
+  for (const cardValue in cardCountMap) {
+    if (cardCountMap[cardValue] === 3) {
+      tripleCards.push(parseInt(cardValue));
+    } else if (cardCountMap[cardValue] === 2) {
+      pairCards.push(parseInt(cardValue));
+    } else {
+      return false; // 非法输入
+    }
   }
 
-  const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
+  if (tripleCards.length !== pairCards.length) {
+    return false; // 飞机牌和对子数量不匹配
+  }
 
-  for (let i = 0; i < sortedCards.length - 3; i += 5) {
-    if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
-      return false;
+  tripleCards.sort((a, b) => a - b);
+
+  for (let i = 0; i < tripleCards.length - 1; i++) {
+    if (tripleCards[i + 1] - tripleCards[i] !== 1) {
+      return false; // 飞机牌不连续
     }
   }
 
