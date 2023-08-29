@@ -61,7 +61,7 @@ async function lostRandomCard(ctx, room, roomDetail, currentPlayerIndex) {
     roomDetail['card' + currentPlayerIndex] = originalHand;
     await ctx.database.upsert('fightLandlordDetail', [roomDetail])
     // 返回触发事件的消息以及丢掉的手牌信息
-    res += `\n玩家${room['player' + currentPlayerIndex + 'Name']}丢掉了一张手牌：${cardToBeLost}`;
+    res += `\n玩家${room['player' + currentPlayerIndex + 'Name']}丢掉了一张手牌：${cardToBeLost.cardName}`;
     res += '\n请重新出牌！'
   } else res = ''
   return res;

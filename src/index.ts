@@ -317,23 +317,23 @@ export function apply(ctx: Context) {
     res.push('ddz.rule: 查看适用的斗地主出牌规则')
     return res.join("\n")
   })
-  // ctx.command('ddz.test').action(async (_) => {
-  //   const prev = [
-  //     {cardValue: 1, cardName: '3'},
-  //     {cardValue: 1, cardName: '3'},
-  //     {cardValue: 1, cardName: '3'},
-  //     {cardValue: 2, cardName: '4'},
-  //   ]
-  //   const current = [
-  //     {cardValue: 2, cardName: '4'},
-  //     {cardValue: 2, cardName: '4'},
-  //     {cardValue: 2, cardName: '4'},
-  //     {cardValue: 1, cardName: '3'},
-  //   ]
-  //   sortCards(current)
-  //   sortCards(prev)
-  //   console.log(current)
-  //   console.log(prev)
-  //   console.log(canBeatPreviousCards(current, prev))
-  // })
+  ctx.command('ddz.test').action(async (_) => {
+    // const prev = [
+    //   {cardValue: 1, cardName: '3'},
+    //   {cardValue: 1, cardName: '3'},
+    //   {cardValue: 1, cardName: '3'},
+    //   {cardValue: 2, cardName: '4'},
+    // ]
+    // const current = [
+    //   {cardValue: 2, cardName: '4'},
+    //   {cardValue: 2, cardName: '4'},
+    //   {cardValue: 2, cardName: '4'},
+    //   {cardValue: 1, cardName: '3'},
+    // ]
+    // sortCards(current)
+    // sortCards(prev)
+    // console.log(current)
+    // console.log(prev)
+    // console.log(canBeatPreviousCards(current, prev))
+  })
 }
