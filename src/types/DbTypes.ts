@@ -1,6 +1,12 @@
 import {Session} from "koishi";
 import {Field} from "@minatojs/core";
 
+export const modeTypes = {
+  0: '经典',
+  1: '魔改',
+  2: '万宁',
+}
+
 declare module 'koishi' {
   interface Tables {
     // 斗地主房间
@@ -31,7 +37,9 @@ export interface FightLandlordRoomModel {
   hostPlayer: string,
   hostPlayerName: string,
   // 状态 0 准备中 1 进行中
-  status: number
+  status: number,
+  // 0 经典模式 1 魔改斗地主 2 万宁斗地主
+  mode: number
 }
 
 export const FightLandlordRoomExtends: Field.Extension = {
@@ -45,6 +53,7 @@ export const FightLandlordRoomExtends: Field.Extension = {
   hostPlayer: 'string',
   hostPlayerName: 'string',
   status: 'unsigned',
+  mode: 'unsigned'
 }
 
 // 斗地主房间详情

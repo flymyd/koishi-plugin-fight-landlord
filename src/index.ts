@@ -1,7 +1,12 @@
 import {Context, Schema} from 'koishi'
-import {FightLandlordDetailExtends, FightLandlordDetailModel, FightLandlordRoomExtends} from "./types/DbTypes";
+import {
+  FightLandlordDetailExtends,
+  FightLandlordDetailModel,
+  FightLandlordRoomExtends, modeTypes
+} from "./types/DbTypes";
 import {autoQuitRoom, getJoinedRoom, getPlayerCount, getPlayingRoom, quitRoom, resetDB} from "./DbUtils";
-import {canBeatPreviousCards, Card, getCardType, initCards, parseArrToCards, sortCards} from "./cardUtils";
+import {canBeatPreviousCards, Card, getCardType, initCards, parseArrToCards, sortCards} from "./CardUtils";
+import {modernEventGenerator} from "./EventUtils";
 
 
 export const name = 'fight-landlord'
@@ -20,11 +25,11 @@ export function apply(ctx: Context) {
     const list = await ctx.database.get('fightLandlordRoom', {})
     const res = list.map(obj => {
       const playerCount = getPlayerCount(obj);
-      return `房间ID: ${obj.id}  房主: ${obj.hostPlayerName}  人数: ${playerCount}  状态: ${obj.status ? '游戏中' : '等待中'}`
+      return `房间ID: ${obj.id}  房主: ${obj.hostPlayerName}  人数: ${playerCount}  模式: ${modeTypes[obj.mode]}斗地主  状态: ${obj.status ? '游戏中' : '等待中'}`
     }).join('\n')
     return res ? `活动中的斗地主房间：\n${res}` : '目前暂无斗地主房间，使用ddz.create以创建一个房间。'
   })
-  ctx.command('ddz.create', '创建斗地主房间').action(async (_) => {
+  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以开启特殊模式').option('mode', '-m', {fallback: 0}).action(async (_) => {
     const {userId, username} = _.session.author;
     let res = '';
     // 查询是否已经在房间中，如果有则自动退出
@@ -36,7 +41,8 @@ export function apply(ctx: Context) {
       player1Name: username,
       hostPlayer: userId,
       hostPlayerName: username,
-      status: 0
+      status: 0,
+      mode: Number(_.options.mode)
     })
     res += `创建房间成功。`
     return res;
@@ -196,6 +202,15 @@ export function apply(ctx: Context) {
             await ctx.database.upsert('fightLandlordDetail', [roomDetail])
             return `${username} 跳过本轮, 请下家 ${room[players[npIndex] + 'Name']} 出牌。`
           }
+          // 当前手牌
+          const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
+          // 魔改斗地主的触发事件逻辑
+          if (room.mode == 1) {
+            const modernEvent = await modernEventGenerator(ctx, room, roomDetail, (nextPlayerIndex + 1));
+            if (modernEvent) {
+              return modernEvent;
+            }
+          }
           // 要出手的卡牌数组
           let currentCardArr: Array<any> = card.split(" ");
           let isCurrentCardArrValid = currentCardArr
@@ -208,8 +223,6 @@ export function apply(ctx: Context) {
             // 堂子牌
             const prevCard: any = roomDetail.previousCard;
             sortCards(prevCard)
-            // 当前手牌
-            const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
             // 判断手牌是否包含待出的牌
             const containsPlayedCards = currentCardArr.every(playedCard => {
               const matchingCardIndex = originalHand.findIndex(handCard => handCard.cardValue === playedCard.cardValue);
@@ -246,6 +259,7 @@ export function apply(ctx: Context) {
               roomDetail.previousCard = [...currentCardArr]
               roomDetail.previousCardHolder = room['player' + (nextPlayerIndex + 1)];
               // 把打出的牌移走
+              // 千王之王
               // const newHand = originalHand.filter(card => {
               //   return !currentCardArr.some(playedCard => playedCard.cardValue === card.cardValue);
               // });
@@ -293,7 +307,7 @@ export function apply(ctx: Context) {
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => {
     let res = [];
     res.push('ddz.list: 列出当前可用的斗地主房间')
-    res.push('ddz.create: 创建一个新的斗地主房间')
+    res.push('ddz.create: 创建一个新的斗地主房间，添加参数-m以开启特殊模式。如ddz.create创建经典房间，ddz.create -m 1创建魔改斗地主房间')
     res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 114')
     res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
     res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
@@ -304,17 +318,22 @@ export function apply(ctx: Context) {
     return res.join("\n")
   })
   // ctx.command('ddz.test').action(async (_) => {
-  //   const card = [
-  //     {cardValue: 4, cardName: '6'},
-  //     {cardValue: 4, cardName: '6'},
-  //     {cardValue: 4, cardName: '6'},
-  //     {cardValue: 3, cardName: '5'},
-  //     {cardValue: 3, cardName: '5'},
-  //     {cardValue: 3, cardName: '5'},
+  //   const prev = [
+  //     {cardValue: 1, cardName: '3'},
+  //     {cardValue: 1, cardName: '3'},
   //     {cardValue: 1, cardName: '3'},
   //     {cardValue: 2, cardName: '4'},
   //   ]
-  //   sortCards(card)
-  //   console.log(getCardType(card))
+  //   const current = [
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 1, cardName: '3'},
+  //   ]
+  //   sortCards(current)
+  //   sortCards(prev)
+  //   console.log(current)
+  //   console.log(prev)
+  //   console.log(canBeatPreviousCards(current, prev))
   // })
 }

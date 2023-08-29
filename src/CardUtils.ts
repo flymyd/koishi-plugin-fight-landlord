@@ -16,9 +16,9 @@ export function sortCards(arr) {
 // 初始化牌局
 export const initCards = () => {
   const originCardHeap = [
-    { cardValue: 14, cardName: '小王', cardColor: 'A' },
-    { cardValue: 15, cardName: '大王', cardColor: 'A' },
-    ...Array.from({ length: 13 * 4 }, (_, index) => {
+    {cardValue: 14, cardName: '小王', cardColor: 'A'},
+    {cardValue: 15, cardName: '大王', cardColor: 'A'},
+    ...Array.from({length: 13 * 4}, (_, index) => {
       const cardValue = Math.ceil((index + 1) / 4);
       let cardName = String(cardValue + 2);
       let cardColor;
@@ -45,7 +45,7 @@ export const initCards = () => {
         cardColor = 'D';
       }
 
-      return { cardValue, cardName, cardColor };
+      return {cardValue, cardName, cardColor};
     })
   ];
 
@@ -340,6 +340,21 @@ function countCards(cards: Card[]): { [cardValue: number]: number } {
 
 // 判断待出的牌能否管住上家的牌
 export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]): boolean {
+  // enum CardType {
+  //   Single = 1, // 单牌
+  //   Pair = 2, // 对子（一对相同点数的牌）
+  //   ThreeOfAKind = 3, // 三张相同点数的牌
+  //   ThreeWithSingle = 4, // 三带一（三张相同点数的牌 + 单牌）
+  //   ThreeWithPair = 5, // 三带一对（三张相同点数的牌 + 一对）
+  //   Straight = 6, // 顺子（连续的五张或更多点数相邻的牌）
+  //   DoubleStraight = 7, // 连对（连续的两对或更多对点数相邻的牌）
+  //   TripleStraight = 8, // 飞机不带翅膀（连续的两个或更多个三张相同点数的牌）
+  //   TripleStraightWithSingle = 9, // 飞机带单牌（连续的两个或更多个三张相同点数的牌 + 相同数量的单牌）
+  //   TripleStraightWithPair = 10, // 飞机带对子（连续的两个或更多个三张相同点数的牌 + 相同数量的对子）
+  //   Bomb = 11, // 炸弹（四张点数相同的牌）
+  //   JokerBomb = 12, // 王炸（即大王+小王）
+  //   Invalid = 13, // 无效牌型（不符合任何有效牌型规则）
+  // }
   const currentCardType = getCardType(currentCards);
   const previousCardType = getCardType(previousCards);
   if (currentCardType === CardType.Invalid) {
@@ -349,6 +364,8 @@ export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]
   } else if (currentCardType === CardType.Bomb && previousCardType !== CardType.JokerBomb) {
     return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
+    // console.log(currentCards[0].cardValue, previousCards[0].cardValue)
+    // TODO fix
     if (currentCards[0].cardValue > previousCards[0].cardValue) {
       return true;
     }
