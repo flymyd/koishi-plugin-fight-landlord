@@ -12,10 +12,8 @@ export function sortCards(arr) {
     }
   }
 }
-
-// 初始化牌局
-export const initCards = () => {
-  const originCardHeap = [
+export const genCards = ()=>{
+  return [
     {cardValue: 14, cardName: '小王', cardColor: 'A'},
     {cardValue: 15, cardName: '大王', cardColor: 'A'},
     ...Array.from({length: 13 * 4}, (_, index) => {
@@ -48,7 +46,10 @@ export const initCards = () => {
       return {cardValue, cardName, cardColor};
     })
   ];
-
+}
+// 初始化牌局
+export const initCards = () => {
+  const originCardHeap = genCards();
   function shuffleCards(arr) {
     arr = JSON.parse(JSON.stringify(arr));
     for (const key in arr) {
