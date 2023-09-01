@@ -29,13 +29,16 @@ export function apply(ctx: Context) {
     }).join('\n')
     return res ? `活动中的斗地主房间：\n${res}` : '目前暂无斗地主房间，使用ddz.create以创建一个房间。'
   })
-  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以开启特殊模式').option('mode', '-m', {fallback: 0}).action(async (_) => {
+  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式。').option('mode', '-m <value:number>', {fallback: 0}).action(async (_) => {
     const {userId, username} = _.session.author;
     let res = '';
     // 查询是否已经在房间中，如果有则自动退出
     const rr = await autoQuitRoom(ctx, _)
     res += rr;
     // 创建新房间
+    if (Number(_.options.mode) > 2) {
+      return '请输入正确的-m参数。'
+    }
     await ctx.database.create('fightLandlordRoom', {
       player1: userId,
       player1Name: username,
@@ -49,7 +52,7 @@ export function apply(ctx: Context) {
   })
   ctx.command('ddz.join', '加入斗地主房间').action(async (_, rid: string) => {
     if (!rid) {
-      return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 114'
+      return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 1'
     }
     const {userId, username} = _.session.author;
     let res = '';
@@ -193,6 +196,7 @@ export function apply(ctx: Context) {
       }
       if (canCurrentUserPlay) {
         if (card) {
+          card = card.toUpperCase();
           let res = ''
           const npIndex = (Number(nextPlayerIndex) + 1) % 3;
           const roomDetail = playingRoomInfo.originDetail
@@ -204,13 +208,6 @@ export function apply(ctx: Context) {
           }
           // 当前手牌
           const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
-          // 魔改斗地主的触发事件逻辑
-          if (room.mode == 1) {
-            const modernEvent = await modernEventGenerator(ctx, room, roomDetail, (nextPlayerIndex + 1));
-            if (modernEvent) {
-              return modernEvent;
-            }
-          }
           // 要出手的卡牌数组
           let currentCardArr: Array<any> = card.split(" ");
           let isCurrentCardArrValid = currentCardArr
@@ -235,6 +232,13 @@ export function apply(ctx: Context) {
             });
             if (!containsPlayedCards) {
               return '你不能出自己没有的牌。'
+            }
+            // 魔改斗地主魔改斗地主的触发事件逻辑
+            if (room.mode == 1) {
+              const modernEvent = await modernEventGenerator(ctx, room, roomDetail, (nextPlayerIndex + 1));
+              if (modernEvent) {
+                return modernEvent;
+              }
             }
             // 出牌逻辑
             let canBeat;
@@ -270,14 +274,16 @@ export function apply(ctx: Context) {
               // 如果该玩家手牌剩余0则播报该玩家胜利，清空对局详情并将对局设置为准备中
               // @ts-ignore
               if (newHand.length < 1) {
+                const lord: any = roomDetail.lordPlayer;
+                const isLord = lord.id == room['player' + (nextPlayerIndex + 1)]
                 await quitRoom(ctx, room, room['player' + (nextPlayerIndex + 1)], true)
-                return `玩家 ${room['player' + (nextPlayerIndex + 1) + 'Name']} 获胜！`
+                return `${isLord ? '地主' : '农民'} ${room['player' + (nextPlayerIndex + 1) + 'Name']} 获胜！`
               } else {
                 await ctx.database.upsert('fightLandlordDetail', [roomDetail])
               }
             }
           } else {
-            return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大写字母J、Q、K、A及"大王"、"小王"。'
+            return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大小写字母J、Q、K、A及"大王"、"小王"。'
           }
           return res;
         } else return '请输入要出的牌或输入"过"以跳过本轮。'
@@ -308,32 +314,30 @@ export function apply(ctx: Context) {
     let res = [];
     res.push('ddz.list: 列出当前可用的斗地主房间')
     res.push('ddz.create: 创建一个新的斗地主房间，添加参数-m以开启特殊模式。如ddz.create创建经典房间，ddz.create -m 1创建魔改斗地主房间')
-    res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 114')
+    res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 1')
     res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
     res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
-    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大写字母和小王、大王两个中文词。不接则输入"过"。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play 过')
+    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大小写字母和小王、大王两个中文词。不接则输入"过"。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play 过')
     res.push('ddz.quit 退出斗地主房间。如果游戏正在进行中，该对局将会中止；如果你是房主，所在房间将会被直接解散。')
     res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
     res.push('ddz.rule: 查看适用的斗地主出牌规则')
     return res.join("\n")
   })
-  ctx.command('ddz.test').action(async (_) => {
-    // const prev = [
-    //   {cardValue: 1, cardName: '3'},
-    //   {cardValue: 1, cardName: '3'},
-    //   {cardValue: 1, cardName: '3'},
-    //   {cardValue: 2, cardName: '4'},
-    // ]
-    // const current = [
-    //   {cardValue: 2, cardName: '4'},
-    //   {cardValue: 2, cardName: '4'},
-    //   {cardValue: 2, cardName: '4'},
-    //   {cardValue: 1, cardName: '3'},
-    // ]
-    // sortCards(current)
-    // sortCards(prev)
-    // console.log(current)
-    // console.log(prev)
-    // console.log(canBeatPreviousCards(current, prev))
-  })
+  // ctx.command('ddz.test').action(async (_) => {
+  //   const prev = [
+  //     {cardValue: 1, cardName: '3'},
+  //     {cardValue: 1, cardName: '3'},
+  //     {cardValue: 1, cardName: '3'},
+  //     {cardValue: 2, cardName: '4'},
+  //   ]
+  //   const current = [
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 2, cardName: '4'},
+  //     {cardValue: 1, cardName: '3'},
+  //   ]
+  //   sortCards(current)
+  //   sortCards(prev)
+  //   console.log(canBeatPreviousCards(current, prev))
+  // })
 }

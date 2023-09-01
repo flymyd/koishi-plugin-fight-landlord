@@ -12,7 +12,8 @@ export function sortCards(arr) {
     }
   }
 }
-export const genCards = ()=>{
+
+export const genCards = () => {
   return [
     {cardValue: 14, cardName: '小王', cardColor: 'A'},
     {cardValue: 15, cardName: '大王', cardColor: 'A'},
@@ -50,6 +51,7 @@ export const genCards = ()=>{
 // 初始化牌局
 export const initCards = () => {
   const originCardHeap = genCards();
+
   function shuffleCards(arr) {
     arr = JSON.parse(JSON.stringify(arr));
     for (const key in arr) {
@@ -86,7 +88,7 @@ export const initCards = () => {
 export interface Card {
   cardValue: number;
   cardName: string;
-  cardColor: string
+  cardColor?: string
 }
 
 export const parseArrToCards = (cardArr: Array<string>) => {
@@ -339,25 +341,32 @@ function countCards(cards: Card[]): { [cardValue: number]: number } {
   return cardCountMap;
 }
 
+// 分组统计同点数的牌
+function classifyAndCount(arr: { cardValue: number; cardName: string }[]) {
+  let countMap: { [key: number]: number } = {};
+  let result: { [key: number]: number[] } = {};
+  arr.forEach((item) => {
+    if (countMap[item.cardValue]) {
+      countMap[item.cardValue]++;
+    } else {
+      countMap[item.cardValue] = 1;
+    }
+  });
+  for (let key in countMap) {
+    if (result[countMap[key]]) {
+      result[countMap[key]].push(parseInt(key));
+    } else {
+      result[countMap[key]] = [parseInt(key)];
+    }
+  }
+  return result;
+}
+
 // 判断待出的牌能否管住上家的牌
 export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]): boolean {
-  // enum CardType {
-  //   Single = 1, // 单牌
-  //   Pair = 2, // 对子（一对相同点数的牌）
-  //   ThreeOfAKind = 3, // 三张相同点数的牌
-  //   ThreeWithSingle = 4, // 三带一（三张相同点数的牌 + 单牌）
-  //   ThreeWithPair = 5, // 三带一对（三张相同点数的牌 + 一对）
-  //   Straight = 6, // 顺子（连续的五张或更多点数相邻的牌）
-  //   DoubleStraight = 7, // 连对（连续的两对或更多对点数相邻的牌）
-  //   TripleStraight = 8, // 飞机不带翅膀（连续的两个或更多个三张相同点数的牌）
-  //   TripleStraightWithSingle = 9, // 飞机带单牌（连续的两个或更多个三张相同点数的牌 + 相同数量的单牌）
-  //   TripleStraightWithPair = 10, // 飞机带对子（连续的两个或更多个三张相同点数的牌 + 相同数量的对子）
-  //   Bomb = 11, // 炸弹（四张点数相同的牌）
-  //   JokerBomb = 12, // 王炸（即大王+小王）
-  //   Invalid = 13, // 无效牌型（不符合任何有效牌型规则）
-  // }
   const currentCardType = getCardType(currentCards);
   const previousCardType = getCardType(previousCards);
+
   if (currentCardType === CardType.Invalid) {
     return false;
   } else if (currentCardType === CardType.JokerBomb) {
@@ -365,9 +374,20 @@ export function canBeatPreviousCards(currentCards: Card[], previousCards: Card[]
   } else if (currentCardType === CardType.Bomb && previousCardType !== CardType.JokerBomb) {
     return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
-    // console.log(currentCards[0].cardValue, previousCards[0].cardValue)
-    // TODO fix
-    if (currentCards[0].cardValue > previousCards[0].cardValue) {
+    const cardTypesToCheck = [
+      CardType.ThreeWithSingle,
+      CardType.ThreeWithPair,
+      CardType.TripleStraightWithSingle,
+      CardType.TripleStraightWithPair
+    ];
+    if (cardTypesToCheck.includes(currentCardType)) {
+      const prevCardGroupCount = classifyAndCount(previousCards)
+      const currentCardGroupCount = classifyAndCount(currentCards)
+      // 提出两组牌的三连牌点数并查找最大值，然后比较
+      const prevMaxTriple = Math.max(...prevCardGroupCount['3'])
+      const currMaxTriple = Math.max(...currentCardGroupCount['3'])
+      return currMaxTriple > prevMaxTriple;
+    } else if (currentCards[0].cardValue > previousCards[0].cardValue) {
       return true;
     }
   }
