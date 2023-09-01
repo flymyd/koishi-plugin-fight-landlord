@@ -254,7 +254,7 @@ export function apply(ctx: Context) {
             } else {
               // 出牌成功逻辑：播报剩余手牌, 刷新对局信息（上家、堂子、弃牌）
               res += `出牌成功！堂子的牌面是: ${currentCardArr.map(o => o.cardName).join(' ')}\n`
-              res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${roomDetail['card' + (nextPlayerIndex + 1)].length}\n`
+              res += `${room['player' + (nextPlayerIndex + 1) + 'Name']} 剩余手牌数: ${originalHand.length}\n`
               res += `请 ${room['player' + (npIndex + 1) + 'Name']} 出牌。`
               // @ts-ignore
               roomDetail.usedCard = [...roomDetail.usedCard, ...currentCardArr];
