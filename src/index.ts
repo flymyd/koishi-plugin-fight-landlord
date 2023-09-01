@@ -170,7 +170,7 @@ export function apply(ctx: Context) {
       return `身份: ${playingRoomInfo.role ? '地主' : '农民'}\n上家出牌: ${previousCard.length > 0 ? previousCard.map(o => o.cardName).join(' ') : '无'}\n记牌器：${recorder}\n手牌: ${playingRoomInfo.card}`
     } else return '你必须在一个已经开始的对局中才能查看手牌。'
   })
-  ctx.command('ddz.play <message:text>', '进行出牌，输入牌名，以空格分割。不接则输入"过"').action(async (_, card: string) => {
+  ctx.command('ddz.play <message:text>', '进行出牌，输入牌名。不接则输入"过"').action(async (_, card: string) => {
     // 必须在一个已经开始的对局中
     const playingRoomInfo = await getPlayingRoom(ctx, _)
     if (playingRoomInfo) {
@@ -208,8 +208,10 @@ export function apply(ctx: Context) {
           }
           // 当前手牌
           const originalHand: any = JSON.parse(JSON.stringify(roomDetail['card' + (nextPlayerIndex + 1)]));
+          const splicePattern = /[2-9]|10|[JQKA]|大王|小王/gi;
+          let currentCardArr: Array<any> = card.match(splicePattern) || [];
           // 要出手的卡牌数组
-          let currentCardArr: Array<any> = card.split(" ");
+          // let currentCardArr: Array<any> = card.split(" ");
           let isCurrentCardArrValid = currentCardArr
             .every(v => ['大王', '小王', 'J', 'Q', 'K', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10']
               .includes(v));
@@ -283,7 +285,7 @@ export function apply(ctx: Context) {
               }
             }
           } else {
-            return '请输入有效的手牌，以空格分割。只能输入2~9的数字、大小写字母J、Q、K、A及"大王"、"小王"。'
+            return '请输入有效的手牌。只能输入2~9的数字、大小写字母J、Q、K、A及"大王"、"小王"。'
           }
           return res;
         } else return '请输入要出的牌或输入"过"以跳过本轮。'
@@ -317,7 +319,7 @@ export function apply(ctx: Context) {
     res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 1')
     res.push('ddz.start: 只有房主可以操作，需要玩家人数满3人')
     res.push('ddz.info: 查看手牌详情，私聊机器人使用以防露牌')
-    res.push('ddz.play 牌组: 进行出牌，输入牌名，以空格分割。牌序可以是乱的，但只接受数字、大小写字母和小王、大王两个中文词。不接则输入"过"。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play 过')
+    res.push('ddz.play 牌组: 进行出牌，输入牌名。牌序可以是乱的，但只接受数字、大小写字母和小王、大王两个中文词。不接则输入"过"。如：ddz.play 大王 小王, ddz.play 3 3 3 4, ddz.play 过')
     res.push('ddz.quit 退出斗地主房间。如果游戏正在进行中，该对局将会中止；如果你是房主，所在房间将会被直接解散。')
     res.push('ddz.reset: 重置全部斗地主房间，用于出问题后进行重置')
     res.push('ddz.rule: 查看适用的斗地主出牌规则')
