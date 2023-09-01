@@ -7,6 +7,7 @@ import {
 import {autoQuitRoom, getJoinedRoom, getPlayerCount, getPlayingRoom, quitRoom, resetDB} from "./DbUtils";
 import {canBeatPreviousCards, Card, getCardType, initCards, parseArrToCards, sortCards} from "./CardUtils";
 import {modernEventGenerator} from "./EventUtils";
+import {addPrefix} from "./SponsorUtils";
 
 
 export const name = 'fight-landlord'
@@ -30,7 +31,9 @@ export function apply(ctx: Context) {
     return res ? `活动中的斗地主房间：\n${res}` : '目前暂无斗地主房间，使用ddz.create以创建一个房间。'
   })
   ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式。').option('mode', '-m <value:number>', {fallback: 0}).action(async (_) => {
-    const {userId, username} = _.session.author;
+    let {userId, username} = _.session.author;
+    let userNamePrefix = addPrefix(userId);
+    username = userNamePrefix + username;
     let res = '';
     // 查询是否已经在房间中，如果有则自动退出
     const rr = await autoQuitRoom(ctx, _)
@@ -54,7 +57,9 @@ export function apply(ctx: Context) {
     if (!rid) {
       return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 1'
     }
-    const {userId, username} = _.session.author;
+    let {userId, username} = _.session.author;
+    let userNamePrefix = addPrefix(userId);
+    username = userNamePrefix + username;
     let res = '';
     const roomList = await ctx.database.get('fightLandlordRoom', rid)
     if (roomList.length > 0) {
