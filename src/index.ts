@@ -207,7 +207,7 @@ export function apply(ctx: Context) {
             return `${username} 跳过本轮, 请下家 ${room[players[npIndex] + 'Name']} 出牌。`
           }
           // 当前手牌
-          const originalHand: any = roomDetail['card' + (nextPlayerIndex + 1)];
+          const originalHand: any = JSON.parse(JSON.stringify(roomDetail['card' + (nextPlayerIndex + 1)]));
           // 要出手的卡牌数组
           let currentCardArr: Array<any> = card.split(" ");
           let isCurrentCardArrValid = currentCardArr
@@ -233,7 +233,7 @@ export function apply(ctx: Context) {
             if (!containsPlayedCards) {
               return '你不能出自己没有的牌。'
             }
-            // 魔改斗地主魔改斗地主的触发事件逻辑
+            // 魔改斗地主的触发事件逻辑
             if (room.mode == 1) {
               const modernEvent = await modernEventGenerator(ctx, room, roomDetail, (nextPlayerIndex + 1));
               if (modernEvent) {
