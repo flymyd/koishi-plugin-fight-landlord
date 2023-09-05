@@ -1,3 +1,4 @@
 export const CONST = {
-  DB: 'fightLandlord'
+  DB: 'fightLandlord',
+  LOGGER: 'fight-landlord'
 } as any;
