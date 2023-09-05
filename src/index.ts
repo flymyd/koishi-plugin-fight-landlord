@@ -1,10 +1,11 @@
-import {Context, Logger, Schema} from 'koishi'
+import {Context, Logger, Random, Schema} from 'koishi'
 import {isJoinedRoom, resetDB} from "./utils/DbUtils";
 import {GameTypeDict} from "./types/GameTypes";
 import {addPrefix} from "./utils/SponsorUtils";
 import {CONST} from "./utils/CONST";
 import {RoomTypes} from "./types/RoomTypes";
-import {initHand} from "./core/CardUtils";
+import {initHand, sortCards} from "./core/CardUtils";
+import {segment} from 'koishi';
 
 
 export const name = 'fight-landlord'
@@ -59,7 +60,7 @@ export function apply(ctx: Context) {
       status: 0,
       usedCard: []
     }
-    newRoom.playerDetail[userId] = {name: username, cards: []}
+    newRoom.playerDetail[userId] = {isLord: false, name: username, cards: []}
     try {
       await ctx.database.create(CONST.DB, newRoom)
       return '创建房间成功。'
@@ -100,13 +101,14 @@ export function apply(ctx: Context) {
       }
       // 加入房间
       currentRoom.playerList.push(userId)
-      currentRoom.playerDetail[userId] = {name: username, cards: []};
+      currentRoom.playerDetail[userId] = {name: username, cards: [], isLord: false};
       try {
         await ctx.database.upsert(CONST.DB, [currentRoom])
         return `${username} 加入了房间 ${currentRoom.id}`
       } catch (e) {
         const logger = new Logger(CONST.LOGGER)
         logger.error(`操作数据表 ${CONST.DB} 失败！`)
+        return '未知错误。'
       }
     }
   })
@@ -128,15 +130,19 @@ export function apply(ctx: Context) {
         })
         // 最后一名玩家退出则直接销毁房间
         const needDestroyRoomList = joinedList.filter(room => room.playerList.length < 1);
-        await ctx.database.remove('fightLandlordRoom', needDestroyRoomList.map(room => room.id))
-        res.push(`最后一名玩家退出，房间 ${needDestroyRoomList.map(r => r.id).join('、')} 已关闭`)
+        await ctx.database.remove(CONST.DB, needDestroyRoomList.map(room => room.id))
+        if (needDestroyRoomList.length > 0) {
+          res.push(`因最后一名玩家退出，房间 ${needDestroyRoomList.map(r => r.id).join('、')} 已关闭`)
+        }
         // 正常退出逻辑
         await ctx.database.upsert(CONST.DB, joinedList)
         res.push(`退出房间 ${joinedList.map(o => o.id).join("、")} 成功。`)
         return res.join('\n');
       } catch (e) {
         const logger = new Logger(CONST.LOGGER)
+        logger.error(e)
         logger.error(`操作数据表 ${CONST.DB} 失败！`)
+        return '未知错误。'
       }
     } else return '未加入房间。'
   })
@@ -149,27 +155,66 @@ export function apply(ctx: Context) {
       return '你还没有加入房间。'
     } else {
       const room = joinedList[0]
+      const playerNum = room.playerList.length;
       if (userId != room.playerList[0]) {
         return '你不是房主，无法开始游戏。'
       } else if (room.status) {
         return `房间 ${room.id} 正在游戏中。`
-      } else if (room.playerList.length < 3) {
-        return `当前房间人数为 ${room.playerList.length} , 至少需要3人才能开始游戏。`
+      } else if (playerNum < 3) {
+        return `当前房间人数为 ${playerNum} , 至少需要3人才能开始游戏。`
       } else {
         room.status = 1;
         // 根据房间人数来做牌
-        const toShuffleCards = initHand(room.playerList.length)
-        // 3人房发3张地主牌，5人房给每个地主发4张地主牌
-        // TODO 发牌
-        room.playerList.map(id => {
-          room.playerDetail[id] = {
-            name: '',
-            cards: []
-          }
+        const toShuffleCards = initHand(playerNum)
+        // 选出地主
+        let lordNum = 1;
+        if (playerNum === 4 || playerNum === 5) {
+          lordNum = 2;
+        } else if (playerNum === 6) {
+          lordNum = 3
+        }
+        const lordList = Random.pick(room.playerList, lordNum)
+        lordList.forEach((id: string) => {
+          room.playerDetail[id].isLord = true;
         })
-        // TODO 设置为地主的ID
-        room.prevStats.playerId = ''
-        room.nextPlayer = ''
+        // 发牌：3人房发3张地主牌，5人房给每个地主发4张地主牌，4、6人房没地主牌
+        const holeCardsRecord = [];  // 发出的地主牌的记录器
+        room.playerList.forEach((id: string, index: number) => {
+          let cards = toShuffleCards.cards[index];
+          if (room.playerDetail[id].isLord) {
+            if (playerNum === 3) {
+              holeCardsRecord.push(toShuffleCards.holeCards)
+              cards = [...cards, ...toShuffleCards.holeCards]
+            } else if (playerNum === 5) {
+              const holeCards = toShuffleCards.holeCards.splice(0, 4)
+              holeCardsRecord.push(holeCards)
+              cards = [...cards, ...holeCards]
+            }
+          }
+          sortCards(cards);
+          room.playerDetail[id] = {...room.playerDetail[id], cards}
+        })
+        // 初始信息 堂主和下家ID都设置为第一位地主的ID
+        const firstLordId = room.playerList.find(player => room.playerDetail[player]?.isLord);
+        room.prevStats.playerId = firstLordId;
+        room.nextPlayer = firstLordId;
+        // 播报地主和对应地主牌的信息
+        let res = []
+        const lordNameList = room.playerList.filter(id => room.playerDetail[id].isLord)
+        const peasantNameList = room.playerList.filter(id => !room.playerDetail[id].isLord)
+        res.push(`本局地主是: ${lordNameList.map(obj => obj).join(' 和 ')}`)
+        res.push(`本局农民是: ${peasantNameList.map(obj => obj).join(' 和 ')}`)
+        if (holeCardsRecord.length > 0) {
+          res.push(`地主牌是: ${holeCardsRecord.map(obj => obj.map(card => card.cardName).join("、")).join(" 和 ")}`)
+        }
+        res.push(`请 ${room.playerDetail[firstLordId].name}: ${segment.at(firstLordId)} 出牌`)
+        try {
+          await ctx.database.upsert(CONST.DB, [room])
+          return res.join("\n")
+        } catch (e) {
+          logger.error(e)
+          return '初始化游戏失败，未知错误。'
+        }
       }
     }
   })

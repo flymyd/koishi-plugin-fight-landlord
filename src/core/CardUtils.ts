@@ -27,8 +27,8 @@ export function sortCards(arr) {
 export const cardHeapGenerator = (haveJoker: boolean = true, isHalf: boolean = false): Array<CardTypes> => {
   const joker = haveJoker ?
     [
-      {cardValue: 14, cardName: '小王', cardColor: 'A'},
-      {cardValue: 15, cardName: '大王', cardColor: 'A'}
+      {cardValue: 14, cardName: '小王', cardColor: 'A', cardUUID: generateUUID()},
+      {cardValue: 15, cardName: '大王', cardColor: 'A', cardUUID: generateUUID()}
     ] : []
   const step = isHalf ? 2 : 4
   return [
@@ -192,9 +192,10 @@ export function initHand(playerNum: number): { cards: Array<Array<CardTypes>>, h
     toSortCards = dealCards(shuffledCardHeap, playerNum, 0)
   }
   toSortCards.cards.forEach(cards => sortCards(cards))
-  if (toSortCards.holeCards.length > 0) {
-    sortCards(toSortCards.holeCards)
-  }
+  // 地主牌要等分完了再洗
+  // if (toSortCards.holeCards.length > 0) {
+  //   sortCards(toSortCards.holeCards)
+  // }
   return toSortCards;
 }
 

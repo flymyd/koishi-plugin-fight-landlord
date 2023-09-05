@@ -12,11 +12,14 @@ declare module 'koishi' {
   }
 }
 
-// 玩家详情
+/**
+ * 玩家详情
+ */
 interface PlayerDetail {
   [key: string]: {
     name: string; // 玩家昵称
     cards: Array<CardTypes>;
+    isLord: boolean;
   }
 }
 
@@ -43,6 +46,9 @@ export interface RoomTypes {
   usedCard: object, //弃牌堆
 }
 
+/**
+ * SQLite Schema
+ */
 export const RoomTypesExtends: Field.Extension = {
   id: 'unsigned',
   mode: 'unsigned',
