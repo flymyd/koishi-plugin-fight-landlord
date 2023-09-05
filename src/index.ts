@@ -4,6 +4,7 @@ import {GameTypeDict} from "./types/GameTypes";
 import {addPrefix} from "./utils/SponsorUtils";
 import {CONST} from "./utils/CONST";
 import {RoomTypes} from "./types/RoomTypes";
+import {initHand} from "./core/CardUtils";
 
 
 export const name = 'fight-landlord'
@@ -156,7 +157,9 @@ export function apply(ctx: Context) {
         return `当前房间人数为 ${room.playerList.length} , 至少需要3人才能开始游戏。`
       } else {
         room.status = 1;
-
+        // 根据房间人数来做牌
+        const toShuffleCards = initHand(room.playerList.length)
+        // 3人房发3张地主牌，5人房给每个地主发4张地主牌
         // TODO 发牌
         room.playerList.map(id => {
           room.playerDetail[id] = {
@@ -180,4 +183,12 @@ export function apply(ctx: Context) {
   // TODO 退出房间后第一顺位为新房主，新增ddz.disband解散房间，若最后一人退出则也解散房间
 
   // 查看手牌
+
+
+  ctx.command('ddz.test').action(async (_) => {
+    initHand(3)
+    initHand(4)
+    initHand(5)
+    initHand(6)
+  })
 }

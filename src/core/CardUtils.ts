@@ -20,17 +20,23 @@ export function sortCards(arr) {
 }
 
 /**
- * 生成一副牌 (标准54张)
+ * 生成牌堆
+ * @param haveJoker 保留大小王
+ * @param isHalf 是否生成半副牌 (除大小王以外的)
  */
-export const cardHeapGenerator = () => {
+export const cardHeapGenerator = (haveJoker: boolean = true, isHalf: boolean = false): Array<CardTypes> => {
+  const joker = haveJoker ?
+    [
+      {cardValue: 14, cardName: '小王', cardColor: 'A'},
+      {cardValue: 15, cardName: '大王', cardColor: 'A'}
+    ] : []
+  const step = isHalf ? 2 : 4
   return [
-    {cardValue: 14, cardName: '小王', cardColor: 'A'},
-    {cardValue: 15, cardName: '大王', cardColor: 'A'},
-    ...Array.from({length: 13 * 4}, (_, index) => {
-      const cardValue = Math.ceil((index + 1) / 4);
+    ...joker,
+    ...Array.from({length: 13 * step}, (_, index) => {
+      const cardValue = Math.ceil((index + 1) / step);
       let cardName = String(cardValue + 2);
       let cardColor;
-
       if (cardName == '11') {
         cardName = 'J';
       } else if (cardName == '12') {
@@ -43,13 +49,13 @@ export const cardHeapGenerator = () => {
         cardName = '2';
       }
 
-      if (index % 4 === 0) {
+      if (index % step === 0) {
         cardColor = 'A';
-      } else if (index % 4 === 1) {
+      } else if (index % step === 1) {
         cardColor = 'B';
-      } else if (index % 4 === 2) {
+      } else if (index % step === 2) {
         cardColor = 'C';
-      } else if (index % 4 === 3) {
+      } else if (index % step === 3) {
         cardColor = 'D';
       }
       const cardUUID = generateUUID()
@@ -74,13 +80,26 @@ export const shuffleCards = (arr: Array<CardTypes>) => {
 /**
  * 发牌
  * @param arr 牌组
+ * @param playerNum 玩家数
+ * @param holeCardsNum 底牌数
  */
-export const dealCards = (arr: Array<CardTypes>) => {
-  let card1 = arr.slice(0, 17);
-  let card2 = arr.slice(17, 34);
-  let card3 = arr.slice(34, 51);
-  let holeCards = arr.slice(51, 54);
-  return {card1, card2, card3, holeCards};
+export const dealCards = (arr: Array<CardTypes>, playerNum: number = 3, holeCardsNum: number = 3) => {
+  const result: {
+    cards: Array<Array<CardTypes>>,
+    holeCards: Array<CardTypes>,
+  } = {
+    cards: [],
+    holeCards: []
+  }
+  const eachNum = Math.floor((arr.length - holeCardsNum) / playerNum);
+  for (let i = 0; i < playerNum; i++) {
+    let cards = arr.slice(i * eachNum, (i + 1) * eachNum)
+    result.cards.push(cards)
+  }
+  if (holeCardsNum) {
+    result.holeCards = arr.slice(arr.length - holeCardsNum, arr.length);
+  }
+  return result;
 }
 
 /**
@@ -139,7 +158,6 @@ export function classifyAndCount(arr: CardTypes[]) {
  */
 export function countCards(cards: CardTypes[]): { [cardValue: number]: number } {
   const cardCountMap: { [cardValue: number]: number } = {};
-
   for (const card of cards) {
     if (cardCountMap.hasOwnProperty(card.cardValue)) {
       cardCountMap[card.cardValue]++;
@@ -147,7 +165,36 @@ export function countCards(cards: CardTypes[]): { [cardValue: number]: number } 
       cardCountMap[card.cardValue] = 1;
     }
   }
-
   return cardCountMap;
+}
+
+/**
+ * 根据玩家数量初始化手牌
+ * @param playerNum
+ */
+export function initHand(playerNum: number): { cards: Array<Array<CardTypes>>, holeCards: Array<CardTypes> } {
+  // 拿牌 洗牌 切分 分别排序 赋值
+  let originalCardHeap: Array<CardTypes> = []
+  if (playerNum === 3) {
+    originalCardHeap = cardHeapGenerator();
+  } else if (playerNum === 4) {
+    originalCardHeap = [...cardHeapGenerator(), ...cardHeapGenerator(false, true)]
+  } else {
+    originalCardHeap = [...cardHeapGenerator(), ...cardHeapGenerator()]
+  }
+  let shuffledCardHeap = shuffleCards(originalCardHeap);
+  let toSortCards;
+  if (playerNum === 3) {
+    toSortCards = dealCards(shuffledCardHeap, playerNum, 3)
+  } else if (playerNum === 5) {
+    toSortCards = dealCards(shuffledCardHeap, playerNum, 8)
+  } else {
+    toSortCards = dealCards(shuffledCardHeap, playerNum, 0)
+  }
+  toSortCards.cards.forEach(cards => sortCards(cards))
+  if (toSortCards.holeCards.length > 0) {
+    sortCards(toSortCards.holeCards)
+  }
+  return toSortCards;
 }
 
