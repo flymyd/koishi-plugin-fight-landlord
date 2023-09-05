@@ -22,53 +22,6 @@ export function apply(ctx: Context) {
   // 插件重启时总是重置牌局
   resetDB(ctx)
 
-  ctx.command('ddz.join', '加入斗地主房间').action(async (_, rid: string) => {
-    if (!rid) {
-      return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 1'
-    }
-    let {userId, username} = _.session.author;
-    let userNamePrefix = addPrefix(userId);
-    username = userNamePrefix + username;
-    let res = '';
-    const roomList = await ctx.database.get('fightLandlordRoom', rid)
-    if (roomList.length > 0) {
-      const room = roomList[0]
-      // 已经在该房间中则不需要再次加入
-      const {player1, player2, player3} = room;
-      const isAlreadyJoined = [player1, player2, player3].filter(player => player == userId).length;
-      if (isAlreadyJoined > 0) {
-        return '你已经在该房间了。'
-      }
-      // 不能加入人满和进行中的对局
-      if (room.status) {
-        return '该房间正在游戏中，使用ddz.create以创建一个房间。'
-      }
-      const playerCount = getPlayerCount(room);
-      if (playerCount > 2) {
-        return '该房间人数已满，使用ddz.create以创建一个房间。'
-      }
-      // 查询是否已经在房间中，如果有则自动退出
-      const rr = await autoQuitRoom(ctx, _)
-      res += rr;
-      const players = ['player1', 'player2', 'player3'];
-      for (const player of players) {
-        if (!room[player]) {
-          room[player] = userId;
-          room[`${player}Name`] = username;
-          break;
-        }
-      }
-      await ctx.database.upsert('fightLandlordRoom', [room])
-      res += `加入房间 ${rid} 成功！`
-      return res;
-    } else return '请输入正确的房间ID。'
-  })
-  ctx.command('ddz.quit', '退出斗地主房间').action(async (_) => {
-    const rr = await autoQuitRoom(ctx, _)
-    if (!rr) {
-      return '未加入房间。'
-    } else return rr;
-  })
   ctx.command('ddz.start', '开始对局').action(async (_) => {
     const {userId, username} = _.session.author;
     let res = '';
@@ -266,9 +219,7 @@ export function apply(ctx: Context) {
       } else return '还没轮到你出牌。'
     } else return '你必须在一个已经开始的对局中才能出牌。'
   })
-  ctx.command('ddz.reset', '重置全部斗地主房间').action(async (_) => {
-    resetDB(ctx)
-  })
+
   ctx.command('ddz.rule', '查看适用的斗地主出牌规则').action(async (_) => {
     let res = [];
     res.push('单牌');

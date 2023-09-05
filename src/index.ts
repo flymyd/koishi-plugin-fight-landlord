@@ -18,7 +18,7 @@ export function apply(ctx: Context) {
   const logger = new Logger(CONST.LOGGER)
 
   // 插件重启时总是重置数据表
-  resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+  // resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
 
   // 房间列表
   ctx.command('ddz.list', '列出当前可用的斗地主房间').action(async (_) => {
@@ -142,8 +142,39 @@ export function apply(ctx: Context) {
 
   // 开始游戏
   ctx.command('ddz.start', '开始游戏').action(async (_) => {
+    let {userId, username} = _.session.author;
+    const joinedList = await isJoinedRoom(ctx, userId);
+    if (!joinedList) {
+      return '你还没有加入房间。'
+    } else {
+      const room = joinedList[0]
+      if (userId != room.playerList[0]) {
+        return '你不是房主，无法开始游戏。'
+      } else if (room.status) {
+        return `房间 ${room.id} 正在游戏中。`
+      } else if (room.playerList.length < 3) {
+        return `当前房间人数为 ${room.playerList.length} , 至少需要3人才能开始游戏。`
+      } else {
+        room.status = 1;
+
+        // TODO 发牌
+        room.playerList.map(id => {
+          room.playerDetail[id] = {
+            name: '',
+            cards: []
+          }
+        })
+        // TODO 设置为地主的ID
+        room.prevStats.playerId = ''
+        room.nextPlayer = ''
+      }
+    }
   })
 
+  // 重置数据表
+  ctx.command('ddz.reset', '重置全部斗地主房间').action(async (_) => {
+    resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+  })
 
   // 退出房间
   // TODO 退出房间后第一顺位为新房主，新增ddz.disband解散房间，若最后一人退出则也解散房间

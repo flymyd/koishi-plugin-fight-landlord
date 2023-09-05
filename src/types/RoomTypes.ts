@@ -34,7 +34,7 @@ export interface RoomTypes {
   playerList: Array<string>,
   // 玩家详情
   playerDetail: PlayerDetail,
-  // 上家详情
+  // 堂子详情
   prevStats: {
     cards: Array<CardTypes>, // 堂子
     playerId: string // 玩家ID

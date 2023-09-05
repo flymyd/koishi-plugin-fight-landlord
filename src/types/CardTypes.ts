@@ -22,5 +22,5 @@ export interface CardTypes {
   cardValue: RangeOfTo<1, 15>;  // 牌值: 范围1到15，对应点数3到大王
   cardName: "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "J" | "Q" | "K" | "A" | "小王" | "大王";  // 点数: 3~10、J、Q、K、A、小王、大王
   cardColor?: "A" | "B" | "C" | "D";  // 花色: A、B、C、D，对应红桃、黑桃、梅花、方块
-  cardUUID: string;  // 卡片唯一标识
+  cardUUID?: string;  // 卡片唯一标识
 }
