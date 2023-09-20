@@ -5,9 +5,10 @@ export const resetDB = async (ctx: Context) => {
   try {
     await ctx.database.drop('fightLandlordRoom')
     await ctx.database.drop('fightLandlordDetail')
-  } catch (e) {}
-  await ctx.model.extend('fightLandlordRoom', FightLandlordRoomExtends)
-  await ctx.model.extend('fightLandlordDetail', FightLandlordDetailExtends)
+  } catch (e) {
+  }
+  await ctx.model.extend('fightLandlordRoom', FightLandlordRoomExtends, {primary: 'id', autoInc: true})
+  await ctx.model.extend('fightLandlordDetail', FightLandlordDetailExtends, {primary: 'id', autoInc: true})
 }
 // 查询是否已经在房间中
 export const getJoinedRoom = async (ctx: Context, _: any) => {
