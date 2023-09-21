@@ -1,11 +1,12 @@
 import {Context, Logger, Random, Schema} from 'koishi'
-import {isJoinedRoom, resetDB} from "./utils/DbUtils";
+import {resetDB} from "./utils/DbUtils";
 import {GameTypeDict} from "./types/GameTypes";
 import {addPrefix} from "./utils/SponsorUtils";
 import {CONST} from "./utils/CONST";
 import {RoomTypes} from "./types/RoomTypes";
 import {initHand, sortCards} from "./core/CardUtils";
 import {segment} from 'koishi';
+import {isJoinedRoom} from "./utils/GameUtils";
 
 
 export const name = 'fight-landlord'
@@ -41,7 +42,7 @@ export function apply(ctx: Context) {
     if (Number(_.options.mode) > 2) {
       return '请输入正确的-m参数。'
     }
-    let {userId, username} = _.session.author;
+    let {userId, username} = _.session;
     // 检查是否已经加入房间，如果有则提示退出
     const joinedList = await isJoinedRoom(ctx, userId);
     if (joinedList) {
@@ -75,7 +76,7 @@ export function apply(ctx: Context) {
     if (!rid) {
       return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 1'
     }
-    let {userId, username} = _.session.author;
+    let {userId, username} = _.session;
     let userNamePrefix = addPrefix(userId);
     username = userNamePrefix + username;
     const roomList = await ctx.database.get(CONST.DB, rid)
@@ -115,7 +116,7 @@ export function apply(ctx: Context) {
 
   // 退出房间
   ctx.command('ddz.quit', '退出斗地主房间').action(async (_) => {
-    let {userId, username} = _.session.author;
+    let {userId, username} = _.session;
     const joinedList = await isJoinedRoom(ctx, userId);
     let res = [];
     if (joinedList) {
@@ -149,7 +150,7 @@ export function apply(ctx: Context) {
 
   // 开始游戏
   ctx.command('ddz.start', '开始游戏').action(async (_) => {
-    let {userId, username} = _.session.author;
+    let {userId, username} = _.session;
     const joinedList = await isJoinedRoom(ctx, userId);
     if (!joinedList) {
       return '你还没有加入房间。'
@@ -226,14 +227,26 @@ export function apply(ctx: Context) {
 
   // 退出房间
   // TODO 退出房间后第一顺位为新房主，新增ddz.disband解散房间，若最后一人退出则也解散房间
+  ctx.command('ddz.quit', '退出斗地主房间').action(async (_)=>{
+
+  })
+
+  // 解散房间
+  ctx.command('ddz.disband', '解散斗地主房间').action(async (_)=>{
+    // TODO
+  })
 
   // 查看手牌
+  // TODO 查看自己手牌，快捷名手牌、查看手牌
+
 
 
   ctx.command('ddz.test').action(async (_) => {
-    initHand(3)
-    initHand(4)
-    initHand(5)
-    initHand(6)
+    const user = _.session
+    console.log(_.session.userId, _.session.username)
+    // initHand(3)
+    // initHand(4)
+    // initHand(5)
+    // initHand(6)
   })
 }
