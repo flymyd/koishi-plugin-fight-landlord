@@ -15,7 +15,7 @@ declare module 'koishi' {
 /**
  * 玩家详情
  */
-interface PlayerDetail {
+export interface PlayerDetail {
   [key: string]: {
     name: string; // 玩家昵称
     cards: Array<CardTypes>;
@@ -40,10 +40,11 @@ export interface RoomTypes {
   // 堂子详情
   prevStats: {
     cards: Array<CardTypes>, // 堂子
-    playerId: string // 玩家ID
+    playerId: string, // 玩家ID
+    playerName: string, //玩家昵称
   },
   nextPlayer: string, // 下家ID
-  usedCard: object, //弃牌堆
+  usedCard: Array<CardTypes>, //弃牌堆
 }
 
 /**

@@ -6,7 +6,7 @@ import {CONST} from "./utils/CONST";
 import {RoomTypes} from "./types/RoomTypes";
 import {initHand, sortCards} from "./core/CardUtils";
 import {segment} from 'koishi';
-import {isJoinedRoom} from "./utils/GameUtils";
+import {getJoinedRoom} from "./utils/GameUtils";
 
 
 export const name = 'fight-landlord'
@@ -19,6 +19,8 @@ export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
   const logger = new Logger(CONST.LOGGER)
+
+  // TODO _.session.author 待迁移为 let {userId, username} = _.session;
 
   // 插件重启时总是重置数据表
   // resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
@@ -42,9 +44,9 @@ export function apply(ctx: Context) {
     if (Number(_.options.mode) > 2) {
       return '请输入正确的-m参数。'
     }
-    let {userId, username} = _.session;
+    let {userId, username} = _.session.author;
     // 检查是否已经加入房间，如果有则提示退出
-    const joinedList = await isJoinedRoom(ctx, userId);
+    const joinedList = await getJoinedRoom(ctx, userId);
     if (joinedList) {
       return `你已加入房间 ${joinedList.map(o => o.id).join("、")} , 请先退出。`;
     }
@@ -57,7 +59,7 @@ export function apply(ctx: Context) {
       nextPlayer: "",
       playerDetail: {},
       playerList: [userId],
-      prevStats: {cards: [], playerId: ""},
+      prevStats: {cards: [], playerId: "", playerName: ""},
       status: 0,
       usedCard: []
     }
@@ -76,7 +78,7 @@ export function apply(ctx: Context) {
     if (!rid) {
       return '请使用ddz.list查询房间列表后，输入待加入的房间ID。如: ddz.join 1'
     }
-    let {userId, username} = _.session;
+    let {userId, username} = _.session.author;
     let userNamePrefix = addPrefix(userId);
     username = userNamePrefix + username;
     const roomList = await ctx.database.get(CONST.DB, rid)
@@ -84,7 +86,7 @@ export function apply(ctx: Context) {
       return '请输入正确的房间ID。'
     } else {
       // 检查是否已经加入房间，如果有则提示退出
-      const joinedList = await isJoinedRoom(ctx, userId);
+      const joinedList = await getJoinedRoom(ctx, userId);
       if (joinedList) {
         return `你已加入房间 ${joinedList.map(o => o.id).join("、")} , 请先退出。`;
       }
@@ -116,8 +118,8 @@ export function apply(ctx: Context) {
 
   // 退出房间
   ctx.command('ddz.quit', '退出斗地主房间').action(async (_) => {
-    let {userId, username} = _.session;
-    const joinedList = await isJoinedRoom(ctx, userId);
+    let {userId, username} = _.session.author;
+    const joinedList = await getJoinedRoom(ctx, userId);
     let res = [];
     if (joinedList) {
       try {
@@ -150,8 +152,8 @@ export function apply(ctx: Context) {
 
   // 开始游戏
   ctx.command('ddz.start', '开始游戏').action(async (_) => {
-    let {userId, username} = _.session;
-    const joinedList = await isJoinedRoom(ctx, userId);
+    let {userId, username} = _.session.author;
+    const joinedList = await getJoinedRoom(ctx, userId);
     if (!joinedList) {
       return '你还没有加入房间。'
     } else {
@@ -198,6 +200,7 @@ export function apply(ctx: Context) {
         // 初始信息 堂主和下家ID都设置为第一位地主的ID
         const firstLordId = room.playerList.find(player => room.playerDetail[player]?.isLord);
         room.prevStats.playerId = firstLordId;
+        room.prevStats.playerName = room.playerDetail[firstLordId].name;
         room.nextPlayer = firstLordId;
         // 播报地主和对应地主牌的信息
         let res = []
@@ -225,28 +228,67 @@ export function apply(ctx: Context) {
     resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
   })
 
-  // 退出房间
-  // TODO 退出房间后第一顺位为新房主，新增ddz.disband解散房间，若最后一人退出则也解散房间
-  ctx.command('ddz.quit', '退出斗地主房间').action(async (_)=>{
-
-  })
-
   // 解散房间
-  ctx.command('ddz.disband', '解散斗地主房间').action(async (_)=>{
-    // TODO
+  ctx.command('ddz.disband', '解散斗地主房间').action(async (_) => {
+    let {userId, username} = _.session.author;
+    const joinedList = await getJoinedRoom(ctx, userId);
+    if (!joinedList) {
+      return '你还没有加入房间。'
+    } else {
+      const room = joinedList[0]
+      if (userId != room.playerList[0]) {
+        return '你不是房主，无法解散房间。'
+      } else {
+        // 解散
+        await ctx.database.remove(CONST.DB, [room.id])
+        return `解散房间 ${room.id} 成功。`
+      }
+    }
   })
 
   // 查看手牌
-  // TODO 查看自己手牌，快捷名手牌、查看手牌
-
+  ctx.command('ddz.info', '查看手牌详情，私聊机器人使用以防露牌').alias('手牌').alias('查看手牌').action(async (_) => {
+    let {userId, username} = _.session.author;
+    const joinedList = await getJoinedRoom(ctx, userId);
+    if (!joinedList) {
+      return '你还没有加入房间。'
+    } else {
+      const room = joinedList[0] as RoomTypes;
+      if (!room.status) {
+        return '你所在的房间尚未开始游戏'
+      }
+      const {playerDetail, prevStats, usedCard} = room;
+      // 当前用户信息
+      const currentDetail = playerDetail[userId];
+      // 记牌器
+      sortCards(usedCard)
+      const groupedCards = usedCard.reduce((acc, card) => {
+        if (acc[card.cardName]) {
+          acc[card.cardName]++;
+        } else {
+          acc[card.cardName] = 1;
+        }
+        return acc;
+      }, {});
+      const recorder = Object.keys(groupedCards).length > 0 ? Object.keys(groupedCards).map(k => k + "*" + groupedCards[k]).join(" ") : '无'
+      const results = [];
+      // 队友列表
+      const member = room.playerList.filter(id => (playerDetail[id].isLord === currentDetail.isLord) && id != userId);
+      results.push(`你的身份是：${currentDetail.isLord ? '地主' : '农民'}`)
+      results.push(`你的队友是：${member.length > 0 ? member.join("、") : '无'}`)
+      results.push(`上家是：${prevStats.playerName}`)
+      results.push(`上家出牌：${prevStats.cards.length > 0 ? prevStats.cards.map(card => card.cardName).join(" ") : '无'}`)
+      results.push(`记牌器: ${recorder}`)
+      results.push(`手牌: ${currentDetail.cards.map(card => card.cardName).join(" ")}`)
+      return results.join('\n');
+    }
+  })
 
 
   ctx.command('ddz.test').action(async (_) => {
-    const user = _.session
-    console.log(_.session.userId, _.session.username)
-    // initHand(3)
-    // initHand(4)
-    // initHand(5)
-    // initHand(6)
+    initHand(3)
+    initHand(4)
+    initHand(5)
+    initHand(6)
   })
 }
