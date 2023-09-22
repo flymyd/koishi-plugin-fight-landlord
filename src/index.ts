@@ -69,11 +69,12 @@ export function apply(ctx: Context) {
     .alias('手牌').alias('查看手牌')
     .action(async (_) => (await info(ctx, _, logger)))
 
-  // 出牌 TODO
+  // 出牌
   ctx.command('ddz.play <message:text>', '进行出牌，输入牌名。不接则输入"过"')
     .alias('出')
-    .action(async (_, card: string) => (await play(ctx, _, logger)))
+    .action(async (_, card: string) => (await play(ctx, _, logger, card)))
 
+  // TODO rule help
   ctx.command('ddz.test').action(async (_) => {
     initHand(3)
     initHand(4)

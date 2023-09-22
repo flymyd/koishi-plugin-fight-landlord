@@ -56,8 +56,10 @@ export function canBeatPreviousCards(currentCards: CardTypes[], previousCards: C
 
   if (currentCardType === PokerHandEnum.Invalid) {
     return false;
-  } else if (currentCardType === PokerHandEnum.JokerBomb) {
+  } else if (currentCardType === PokerHandEnum.JokerBomb && previousCardType !== PokerHandEnum.JokerBomb) {
     return true;
+  } else if (currentCardType === PokerHandEnum.JokerBomb && previousCardType === PokerHandEnum.JokerBomb) {
+    return false;
   } else if (currentCardType === PokerHandEnum.Bomb && previousCardType !== PokerHandEnum.JokerBomb) {
     return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
@@ -78,7 +80,6 @@ export function canBeatPreviousCards(currentCards: CardTypes[], previousCards: C
       return true;
     }
   }
-
   return false;
 }
 
@@ -121,7 +122,6 @@ function isPair(cards: CardTypes[]): boolean {
 function isThreeWithSingle(cards: CardTypes[]): boolean {
   const cardCountMap = countCards(cards);
   const values = Object.values(cardCountMap);
-
   return (
     values.length === 2 &&
     (values[0] === 3 || values[1] === 3) &&
@@ -136,7 +136,6 @@ function isThreeWithSingle(cards: CardTypes[]): boolean {
 function isThreeWithPair(cards: CardTypes[]): boolean {
   const cardCountMap = countCards(cards);
   const values = Object.values(cardCountMap);
-
   return (
     values.length === 2 &&
     (values[0] === 3 || values[1] === 3) &&
@@ -150,13 +149,11 @@ function isThreeWithPair(cards: CardTypes[]): boolean {
  */
 function isStraight(cards: CardTypes[]): boolean {
   const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
-
   for (let i = 0; i < sortedCards.length - 1; i++) {
     if (sortedCards[i].cardValue + 1 !== sortedCards[i + 1].cardValue) {
       return false;
     }
   }
-
   return true;
 }
 
@@ -168,21 +165,17 @@ function isDoubleStraight(cards: CardTypes[]): boolean {
   if (cards.length % 2 !== 0) {
     return false;
   }
-
   const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
-
   for (let i = 0; i < sortedCards.length; i += 2) {
     if (sortedCards[i].cardValue !== sortedCards[i + 1].cardValue) {
       return false;
     }
   }
-
   for (let i = 0; i < sortedCards.length - 2; i += 2) {
     if (sortedCards[i].cardValue + 1 !== sortedCards[i + 2].cardValue) {
       return false;
     }
   }
-
   return true;
 }
 
@@ -194,22 +187,17 @@ function isTripleStraight(cards: CardTypes[]): boolean {
   if (cards.length % 3 !== 0) {
     return false;
   }
-
   const cardCountMap = countCards(cards);
   const values = Object.values(cardCountMap);
-
   if (values.length !== 1 || values[0] !== 3) {
     return false;
   }
-
   const sortedCards = cards.sort((a, b) => a.cardValue - b.cardValue);
-
   for (let i = 0; i < sortedCards.length - 3; i += 3) {
     if (sortedCards[i].cardValue + 1 !== sortedCards[i + 3].cardValue) {
       return false;
     }
   }
-
   return true;
 }
 
@@ -221,7 +209,6 @@ function isTripleStraightWithSingle(cards: CardTypes[]): boolean {
   const cardCountMap = countCards(cards);
   const tripleCards = [];
   const singleCards = [];
-
   for (const cardValue in cardCountMap) {
     if (cardCountMap[cardValue] === 3) {
       tripleCards.push(parseInt(cardValue));
@@ -231,19 +218,15 @@ function isTripleStraightWithSingle(cards: CardTypes[]): boolean {
       return false; // 非法输入
     }
   }
-
   if (tripleCards.length !== singleCards.length) {
     return false; // 飞机牌和单牌数量不匹配
   }
-
   tripleCards.sort((a, b) => a - b);
-
   for (let i = 0; i < tripleCards.length - 1; i++) {
     if (tripleCards[i + 1] - tripleCards[i] !== 1) {
       return false; // 飞机牌不连续
     }
   }
-
   return true;
 }
 
@@ -255,7 +238,6 @@ function isTripleStraightWithPair(cards: CardTypes[]): boolean {
   const cardCountMap = countCards(cards);
   const tripleCards = [];
   const pairCards = [];
-
   for (const cardValue in cardCountMap) {
     if (cardCountMap[cardValue] === 3) {
       tripleCards.push(parseInt(cardValue));
@@ -265,18 +247,14 @@ function isTripleStraightWithPair(cards: CardTypes[]): boolean {
       return false; // 非法输入
     }
   }
-
   if (tripleCards.length !== pairCards.length) {
     return false; // 飞机牌和对子数量不匹配
   }
-
   tripleCards.sort((a, b) => a - b);
-
   for (let i = 0; i < tripleCards.length - 1; i++) {
     if (tripleCards[i + 1] - tripleCards[i] !== 1) {
       return false; // 飞机牌不连续
     }
   }
-
   return true;
 }

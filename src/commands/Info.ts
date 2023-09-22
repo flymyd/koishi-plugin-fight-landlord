@@ -11,7 +11,7 @@ export const info = async (ctx: Context, _, logger: Logger) => {
   } else {
     const room = joinedList[0] as RoomTypes;
     if (!room.status) {
-      return '你所在的房间尚未开始游戏'
+      return '你所在的房间尚未开始游戏。'
     }
     const {playerDetail, prevStats, usedCard} = room;
     // 当前用户信息

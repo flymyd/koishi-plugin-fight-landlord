@@ -2,8 +2,7 @@ import {Context, Logger} from "koishi";
 import {getJoinedRoom} from "../utils/GameUtils";
 import {RoomTypes} from "../types/RoomTypes";
 
-export const play = async (ctx: Context, _, logger: Logger) => {
-  // TODO
+export const play = async (ctx: Context, _, logger: Logger, card: string) => {
   let {userId, username} = _.session.author;
   const joinedList = await getJoinedRoom(ctx, userId);
   if (!joinedList) {
@@ -14,6 +13,6 @@ export const play = async (ctx: Context, _, logger: Logger) => {
       return '你所在的房间尚未开始游戏'
     }
     const {playerDetail, prevStats, usedCard} = room;
-
+    // TODO
   }
 }
