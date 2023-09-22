@@ -5,7 +5,8 @@ import {RoomTypes} from "../types/RoomTypes";
 
 
 export const modernEventGenerator = async (ctx, room: RoomTypes, currentPlayerId) => {
-  const logicArray = [changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine];
+  // const logicArray = [changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine];
+  const logicArray = [changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard];
   const randomIndex = getRandomIndex(logicArray.length);
   const randomLogic = logicArray[randomIndex];
   const randomTrigger = Math.random()
