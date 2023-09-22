@@ -118,7 +118,7 @@ export const play = async (ctx: Context, _, logger: Logger, card: string) => {
               return `${currentPlayer.isLord ? '地主' : '农民'} ${member.join("、")} 获胜！`
             } else {
               await ctx.database.upsert(CONST.DB, [room])
-              return res.join("\n");
+              return h.parse(res.join("\n"));
             }
           }
         } else return '请输入有效的手牌。只能输入2~9的数字、大小写字母J、Q、K、A及"大王"、"小王"。'
