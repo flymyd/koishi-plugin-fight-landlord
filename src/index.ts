@@ -10,6 +10,8 @@ import {start} from "./commands/Start";
 import {disband} from "./commands/Disband";
 import {info} from "./commands/Info";
 import {play} from "./commands/Play";
+import {rule} from "./commands/Rule";
+import {help} from "./commands/Help";
 
 
 export const name = 'fight-landlord'
@@ -27,6 +29,8 @@ export function apply(ctx: Context) {
 
   // 插件重启时总是重置数据表
   resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+
+  ctx.command('ddz', '欢乐斗地主').action(async (_) => (await help()))
 
   // 房间列表
   ctx.command('ddz.list', '列出当前可用的斗地主房间')
@@ -69,11 +73,9 @@ export function apply(ctx: Context) {
     .alias('出')
     .action(async (_, card: string) => (await play(ctx, _, logger, card)))
 
-  // TODO rule help
-  ctx.command('ddz.test').action(async (_) => {
-    initHand(3)
-    initHand(4)
-    initHand(5)
-    initHand(6)
-  })
+  // 出牌规则
+  ctx.command('ddz.rule', '查看适用的斗地主出牌规则').action(async (_) => (await rule()))
+
+  // 使用说明
+  ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => (await help()))
 }
