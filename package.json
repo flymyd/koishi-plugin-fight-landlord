@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-fight-landlord",
   "description": "koishi斗地主游戏",
-  "version": "1.0.127",
+  "version": "1.1.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -25,7 +25,7 @@
     "斗地主"
   ],
   "peerDependencies": {
-    "koishi": "^4.14.1"
+    "koishi": "^4.14.6"
   },
   "koishi": {
     "description": {
