@@ -25,8 +25,8 @@ export function apply(ctx: Context) {
 
   // TODO _.session.author 待迁移为 let {userId, username} = _.session;
 
-  // TODO 插件重启时总是重置数据表
-  // resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+  // 插件重启时总是重置数据表
+  resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
 
   // 房间列表
   ctx.command('ddz.list', '列出当前可用的斗地主房间')
