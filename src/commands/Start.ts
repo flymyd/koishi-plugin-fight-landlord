@@ -1,4 +1,4 @@
-import {Context, Logger, Random, segment} from "koishi";
+import {Context, h, Logger, Random, segment} from "koishi";
 import {getJoinedRoom} from "../utils/GameUtils";
 import {initHand, sortCards} from "../core/CardUtils";
 import {CONST} from "../utils/CONST";
@@ -57,16 +57,18 @@ export const start = async (ctx: Context, _, logger: Logger) => {
       // 播报地主和对应地主牌的信息
       let res = []
       const lordNameList = room.playerList.filter(id => room.playerDetail[id].isLord)
+        .map(id => room.playerDetail[id].name)
       const peasantNameList = room.playerList.filter(id => !room.playerDetail[id].isLord)
-      res.push(`本局地主是: ${lordNameList.map(obj => obj).join(' 和 ')}`)
-      res.push(`本局农民是: ${peasantNameList.map(obj => obj).join(' 和 ')}`)
+        .map(id => room.playerDetail[id].name)
+      res.push(`本局地主是: ${lordNameList.map(obj => obj).join('、')}`)
+      res.push(`本局农民是: ${peasantNameList.map(obj => obj).join('、')}`)
       if (holeCardsRecord.length > 0) {
         res.push(`地主牌是: ${holeCardsRecord.map(obj => obj.map(card => card.cardName).join("、")).join(" 和 ")}`)
       }
       res.push(`请 ${room.playerDetail[firstLordId].name}: ${segment.at(firstLordId)} 出牌`)
       try {
         await ctx.database.upsert(CONST.DB, [room])
-        return res.join("\n")
+        return h.parse(res.join("\n"));
       } catch (e) {
         logger.error(e)
         return '初始化游戏失败，未知错误。'

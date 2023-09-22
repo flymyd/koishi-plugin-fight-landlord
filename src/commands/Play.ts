@@ -1,4 +1,4 @@
-import {Context, Logger, segment} from "koishi";
+import {Context, h, Logger, segment} from "koishi";
 import {getJoinedRoom, getSpecifiedPlayer} from "../utils/GameUtils";
 import {RoomTypes} from "../types/RoomTypes";
 import {CONST} from "../utils/CONST";
@@ -34,7 +34,7 @@ export const play = async (ctx: Context, _, logger: Logger, card: string) => {
         if (card.includes('过')) {
           room.nextPlayerId = nextPlayer.id;
           await ctx.database.upsert(CONST.DB, [room])
-          return `${username} 跳过本轮，请下家 ${nextPlayer.name}：${segment.at(nextPlayer.id)} 出牌。`
+          return h.parse(`${username} 跳过本轮，请下家 ${nextPlayer.name}：${segment.at(nextPlayer.id)} 出牌。`)
         }
         // 当前玩家的手牌
         const originalHand = JSON.parse(JSON.stringify(currentPlayer.cards));
