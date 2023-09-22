@@ -53,7 +53,7 @@ export const start = async (ctx: Context, _, logger: Logger) => {
       const firstLordId = room.playerList.find(player => room.playerDetail[player]?.isLord);
       room.prevStats.playerId = firstLordId;
       room.prevStats.playerName = room.playerDetail[firstLordId].name;
-      room.nextPlayer = firstLordId;
+      room.nextPlayerId = firstLordId;
       // 播报地主和对应地主牌的信息
       let res = []
       const lordNameList = room.playerList.filter(id => room.playerDetail[id].isLord)

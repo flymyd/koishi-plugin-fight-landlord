@@ -29,7 +29,9 @@ export const info = async (ctx: Context, _, logger: Logger) => {
     const recorder = Object.keys(groupedCards).length > 0 ? Object.keys(groupedCards).map(k => k + "*" + groupedCards[k]).join(" ") : '无'
     const results = [];
     // 队友列表
-    const member = room.playerList.filter(id => (playerDetail[id].isLord === currentDetail.isLord) && id != userId);
+    const member = room.playerList
+      .filter(id => (playerDetail[id].isLord === currentDetail.isLord) && id != userId)
+      .map(id => playerDetail[id].name);
     results.push(`你的身份是：${currentDetail.isLord ? '地主' : '农民'}`)
     results.push(`你的队友是：${member.length > 0 ? member.join("、") : '无'}`)
     results.push(`上家是：${prevStats.playerName}`)

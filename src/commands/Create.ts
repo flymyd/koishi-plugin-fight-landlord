@@ -21,7 +21,7 @@ export const create = async (ctx: Context, _, logger: Logger) => {
   // 创建新房间
   const newRoom: RoomTypes = {
     mode: Number(_.options.mode),
-    nextPlayer: "",
+    nextPlayerId: "",
     playerDetail: {},
     playerList: [userId],
     prevStats: {cards: [], playerId: "", playerName: ""},

@@ -40,10 +40,10 @@ export interface RoomTypes {
   // 堂子详情
   prevStats: {
     cards: Array<CardTypes>, // 堂子
-    playerId: string, // 玩家ID
-    playerName: string, //玩家昵称
+    playerId: string, // 堂主id
+    playerName: string, //堂主昵称
   },
-  nextPlayer: string, // 下家ID
+  nextPlayerId: string, // 下家ID
   usedCard: Array<CardTypes>, //弃牌堆
 }
 
@@ -57,6 +57,6 @@ export const RoomTypesExtends: Field.Extension = {
   playerList: 'json',
   playerDetail: 'json',
   prevStats: 'json',
-  nextPlayer: 'string',
+  nextPlayerId: 'string',
   usedCard: 'json'
 }
