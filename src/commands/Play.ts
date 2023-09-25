@@ -65,13 +65,6 @@ export const play = async (ctx: Context, _, logger: Logger, card: string) => {
           if (!containsPlayedCards) {
             return '你不能出自己没有的牌。'
           }
-          // 魔改斗地主的触发事件逻辑
-          if (room.mode == 1) {
-            const modernEvent = await modernEventGenerator(ctx, room, currentPlayer.id);
-            if (modernEvent) {
-              return modernEvent;
-            }
-          }
           // 出牌逻辑
           let canBeat;
           if (prevCard.length < 1 || prevStats.playerId == userId) {
@@ -81,6 +74,18 @@ export const play = async (ctx: Context, _, logger: Logger, card: string) => {
           if (!canBeat) {
             return '你所出的牌不大于上家或不符合出牌规则。'
           } else {
+            // 魔改斗地主的触发事件逻辑
+            if (room.mode == 1) {
+              const modernEvent = await modernEventGenerator(ctx, room, currentPlayer.id, 0.1);
+              if (modernEvent) {
+                return modernEvent;
+              }
+            } else if (room.mode == 2) {
+              const modernEvent = await modernEventGenerator(ctx, room, currentPlayer.id, 0.25);
+              if (modernEvent) {
+                return modernEvent;
+              }
+            }
             // 出牌成功逻辑：播报剩余手牌, 刷新对局信息
             const res = [];
             res.push(`出牌成功！堂子的牌面是: ${currentCardArr.map(o => o.cardName).join(' ')}`)

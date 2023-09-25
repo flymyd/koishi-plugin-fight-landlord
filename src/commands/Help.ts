@@ -1,7 +1,7 @@
 export const help = async ()=>{
   let res = [];
   res.push('ddz.list: 列出当前可用的斗地主房间')
-  res.push('ddz.create: 创建一个新的斗地主房间，添加参数-m以开启特殊模式。如ddz.create创建经典房间，ddz.create -m 1创建魔改斗地主房间')
+  res.push('ddz.create: 创建一个新的斗地主房间，添加参数-m以开启特殊模式。如ddz.create创建经典房间，ddz.create -m 1创建魔改斗地主房间, -m 2创建万宁斗地主房间')
   res.push('ddz.join id: 加入指定ID的斗地主房间，ID从ddz.list中查找。如: ddz.join 1')
   res.push('ddz.start: 只有房主可以操作，需要房间内玩家人数至少3人')
   res.push('ddz.info（或：手牌）: 查看手牌详情，私聊机器人使用以防露牌')

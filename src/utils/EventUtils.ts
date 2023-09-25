@@ -4,14 +4,14 @@ import {CONST} from "./CONST";
 import {RoomTypes} from "../types/RoomTypes";
 
 
-export const modernEventGenerator = async (ctx, room: RoomTypes, currentPlayerId) => {
+export const modernEventGenerator = async (ctx, room: RoomTypes, currentPlayerId, randomRatio) => {
   const logicArray = [
-    changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine, swapCard, swapIdentities
+    changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine, swapCard, swapIdentities, swapAllCard, reversePlayerList
   ];
   const randomIndex = getRandomIndex(logicArray.length);
   const randomLogic = logicArray[randomIndex];
   const randomTrigger = Math.random()
-  if (randomTrigger < 0.1) {
+  if (randomTrigger < randomRatio) {
     return await randomLogic(ctx, room, currentPlayerId);
   } else return '';
 }
@@ -130,6 +130,30 @@ async function swapCard(ctx, room: RoomTypes, currentPlayerId) {
   return res;
 }
 
+// 乾坤大挪移-将一名玩家的全部手牌和自己的全部手牌交换
+async function swapAllCard(ctx, room: RoomTypes, currentPlayerId) {
+  let res = '触发事件：乾坤大挪移！\n将一名玩家的全部手牌和自己的全部手牌交换。';
+  // 当前玩家
+  const currentPlayer = {...room.playerDetail[currentPlayerId], id: currentPlayerId}
+  // 当前玩家的手牌
+  const originalHand = JSON.parse(JSON.stringify(currentPlayer.cards));
+  // 生成一个随机索引，表示目标玩家
+  const randomPlayerIndex = Math.floor(Math.random() * room.playerList.length);
+  const distPlayerId = room.playerList[randomPlayerIndex];
+  // 目标玩家
+  const distPlayer = {...room.playerDetail[distPlayerId], id: distPlayerId}
+  // 目标玩家的手牌
+  const distHand = JSON.parse(JSON.stringify(distPlayer.cards));
+  // 更新房间详情中的手牌信息
+  room.playerDetail[currentPlayerId].cards = [...distHand]
+  room.playerDetail[distPlayerId].cards = [...originalHand]
+  await ctx.database.upsert(CONST.DB, [room])
+  // 返回触发事件的消息以及交换的手牌信息
+  res += `\n玩家${currentPlayer.name}和玩家${distPlayer.name}互换了手牌。`;
+  res += '\n请重新出牌！'
+  return res;
+}
+
 // 狸猫换太子-将一名玩家的身份和自己的身份交换
 async function swapIdentities(ctx, room: RoomTypes, currentPlayerId) {
   let res = '触发事件：狸猫换太子！\n将一名玩家的身份和自己的身份交换。';
@@ -147,6 +171,15 @@ async function swapIdentities(ctx, room: RoomTypes, currentPlayerId) {
   // 返回触发事件的消息以及交换的手牌信息
   res += `\n玩家${currentPlayer.name}的身份变为：${distPlayer.isLord ? '地主' : '农民'}`;
   res += `\n玩家${distPlayer.name}的身份变为：${currentPlayer.isLord ? '地主' : '农民'}`;
+  res += '\n请重新出牌！'
+  return res;
+}
+
+// 反转了-翻转出牌顺序
+async function reversePlayerList(ctx, room: RoomTypes, currentPlayerId) {
+  let res = '触发事件：反转了！\n翻转出牌顺序。'
+  room.playerList.reverse()
+  await ctx.database.upsert(CONST.DB, [room])
   res += '\n请重新出牌！'
   return res;
 }
