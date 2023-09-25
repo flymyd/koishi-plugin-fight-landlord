@@ -38,7 +38,7 @@ export function apply(ctx: Context) {
     .action(async (_) => (await list(ctx, _, logger)))
 
   // 创建房间
-  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式。')
+  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式，2：万宁模式。')
     .option('mode', '-m <value:number>', {fallback: 0})
     .action(async (_) => (await create(ctx, _, logger)))
 
