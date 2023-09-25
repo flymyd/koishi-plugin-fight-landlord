@@ -11,6 +11,7 @@ export const quit = async (ctx: Context, _, logger: Logger) => {
       joinedList.forEach(room => {
         if (room.status) {
           res.push(`房间 ${room.id} 正在游戏中, 退出失败。`)
+          return res.join("\n")
         } else {
           room.playerList = room.playerList.filter(id => id != userId);
           delete room.playerDetail[userId]

@@ -12,6 +12,7 @@ import {info} from "./commands/Info";
 import {play} from "./commands/Play";
 import {rule} from "./commands/Rule";
 import {help} from "./commands/Help";
+import {RoomTypes} from "./types/RoomTypes";
 
 
 export const name = 'fight-landlord'
@@ -56,7 +57,9 @@ export function apply(ctx: Context) {
   // 重置数据表
   ctx.command('ddz.reset', '重置全部斗地主房间')
     .action(async (_) => {
-      resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+      await resetDB(ctx)
+      logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`)
+      return `斗地主数据表初始化成功`
     })
 
   // 解散房间
@@ -78,4 +81,8 @@ export function apply(ctx: Context) {
 
   // 使用说明
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => (await help()))
+
+  // ctx.command('ddz.test', '测试').action(async (_) => {
+  //   const room = await ctx.database.get(CONST.DB, 1) as Array<RoomTypes>
+  // })
 }

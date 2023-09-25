@@ -61,7 +61,9 @@ export function canBeatPreviousCards(currentCards: CardTypes[], previousCards: C
   } else if (currentCardType === PokerHandEnum.JokerBomb && previousCardType === PokerHandEnum.JokerBomb) {
     return false;
   } else if (currentCardType === PokerHandEnum.Bomb && previousCardType !== PokerHandEnum.JokerBomb) {
-    return true;
+    if (currentCardType === PokerHandEnum.Bomb && previousCardType === PokerHandEnum.Bomb) {
+      return currentCards[0].cardValue > previousCards[0].cardValue;
+    } else return true;
   } else if (currentCardType === previousCardType && currentCards.length === previousCards.length) {
     const cardTypesToCheck = [
       PokerHandEnum.ThreeWithSingle,
