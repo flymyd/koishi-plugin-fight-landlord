@@ -29,6 +29,7 @@ async function changeMaximumCardToTwo(ctx, room: RoomTypes, currentPlayerId) {
   sortCards(originalHand)
   originalHand[0].cardValue = 13
   originalHand[0].cardName = '2'
+  room.playerDetail[currentPlayerId].cards = [...originalHand]
   await ctx.database.upsert(CONST.DB, [room])
   res += '\n请重新出牌！'
   return res;
