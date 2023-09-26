@@ -179,8 +179,10 @@ export function initHand(playerNum: number): { cards: Array<Array<CardTypes>>, h
     originalCardHeap = cardHeapGenerator();
   } else if (playerNum === 4) {
     originalCardHeap = [...cardHeapGenerator(), ...cardHeapGenerator(false, true)]
-  } else {
+  } else if (playerNum === 5) {
     originalCardHeap = [...cardHeapGenerator(), ...cardHeapGenerator()]
+  } else {
+    originalCardHeap = [...cardHeapGenerator(), ...cardHeapGenerator(), ...cardHeapGenerator()]
   }
   let shuffledCardHeap = shuffleCards(originalCardHeap);
   let toSortCards;
