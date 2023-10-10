@@ -6,7 +6,7 @@ import {RoomTypes} from "../types/RoomTypes";
 
 export const modernEventGenerator = async (ctx, room: RoomTypes, currentPlayerId, randomRatio) => {
   const logicArray = [
-    changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine, swapCard, swapIdentities, swapAllCard, reversePlayerList
+    changeMaximumCardToTwo, showRandomPlayerCard, lostRandomCard, sunshine, swapCard, swapIdentities, swapAllCard, reversePlayerList, midiFestival
   ];
   const randomIndex = getRandomIndex(logicArray.length);
   const randomLogic = logicArray[randomIndex];
@@ -181,6 +181,26 @@ async function reversePlayerList(ctx, room: RoomTypes, currentPlayerId) {
   let res = '触发事件：反转了！\n翻转出牌顺序。'
   room.playerList.reverse()
   await ctx.database.upsert(CONST.DB, [room])
+  res += '\n请重新出牌！'
+  return res;
+}
+
+// 摇滚狂欢-每名手牌数大于1的玩家均失去点数最大的一张手牌
+async function midiFestival(ctx, room: RoomTypes, currentPlayerId) {
+  let res = '触发事件：摇滚狂欢！\n每名手牌数大于1的玩家均失去点数最大的一张手牌。';
+  const toShift = []
+  room.playerList.forEach(id => {
+    // 当前玩家的手牌
+    if (room.playerDetail[id].cards.length > 1) {
+      const shift = room.playerDetail[id].cards.shift()
+      toShift.push({name: room.playerDetail[id].name, cardName: shift.cardName})
+    }
+  })
+  await ctx.database.upsert(CONST.DB, [room])
+  // 返回触发事件的消息以及交换的手牌信息
+  toShift.forEach(obj => {
+    res += `\n玩家${obj.name}丢掉了一张手牌：${obj.cardName}`
+  })
   res += '\n请重新出牌！'
   return res;
 }

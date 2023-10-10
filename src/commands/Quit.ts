@@ -11,7 +11,6 @@ export const quit = async (ctx: Context, _, logger: Logger) => {
       joinedList.forEach(room => {
         if (room.status) {
           res.push(`房间 ${room.id} 正在游戏中, 退出失败。`)
-          return res.join("\n")
         } else {
           room.playerList = room.playerList.filter(id => id != userId);
           delete room.playerDetail[userId]
@@ -25,8 +24,9 @@ export const quit = async (ctx: Context, _, logger: Logger) => {
       }
       // 正常退出逻辑
       await ctx.database.upsert(CONST.DB, joinedList)
-      res.push(`退出房间 ${joinedList.map(o => o.id).join("、")} 成功。`)
-      return res.join('\n');
+      if (res.length > 0) {
+        return res.join('\n');
+      } else return `退出房间 ${joinedList.map(o => o.id).join("、")} 成功。`
     } catch (e) {
       const logger = new Logger(CONST.LOGGER)
       logger.error(e)

@@ -211,11 +211,15 @@ function isTripleStraightWithSingle(cards: CardTypes[]): boolean {
   const cardCountMap = countCards(cards);
   const tripleCards = [];
   const singleCards = [];
+  const doubleCards = [];
   for (const cardValue in cardCountMap) {
     if (cardCountMap[cardValue] === 3) {
       tripleCards.push(parseInt(cardValue));
     } else if (cardCountMap[cardValue] === 1) {
       singleCards.push(parseInt(cardValue));
+    } else if (cardCountMap[cardValue] === 2) {
+      doubleCards.push(parseInt(cardValue));
+      singleCards.push(parseInt(cardValue), parseInt(cardValue));  // 将对子视为两张单牌处理
     } else {
       return false; // 非法输入
     }
@@ -231,6 +235,7 @@ function isTripleStraightWithSingle(cards: CardTypes[]): boolean {
   }
   return true;
 }
+
 
 /**
  * 飞机带对子
