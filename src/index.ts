@@ -1,7 +1,6 @@
 import {Context, Logger, Schema} from 'koishi'
 import {resetDB} from "./utils/DbUtils";
 import {CONST} from "./utils/CONST";
-import {initHand} from "./core/CardUtils";
 import {list} from "./commands/List";
 import {create} from "./commands/Create";
 import {join} from "./commands/Join";
@@ -13,11 +12,10 @@ import {play} from "./commands/Play";
 import {rule} from "./commands/Rule";
 import {help} from "./commands/Help";
 import {RoomTypes} from "./types/RoomTypes";
+import {getAnotherPlayer} from "./utils/GameUtils";
 
-
-export const name = 'fight-landlord'
-export const using = ['database']
-
+export const name = 'fight-landlord';
+export const using = ['database'];
 export interface Config {
 }
 
@@ -82,9 +80,12 @@ export function apply(ctx: Context) {
   // 使用说明
   ctx.command('ddz.help', '查看斗地主指令使用说明').action(async (_) => (await help()))
 
-  // ctx.command('ddz.test', '测试').action(async (_) => {
-  //   const room = await ctx.database.get(CONST.DB, 1) as Array<RoomTypes>
-  // })
+  ctx.command('ddz.test', '测试').action(async (_) => {
+    const room = await ctx.database.get(CONST.DB, 1) as Array<RoomTypes>
+    let {userId, username} = _.session.author;
+    const id = getAnotherPlayer(room[0], userId)
+    console.log(id)
+  })
 }
 
 export const usage = `
@@ -92,7 +93,8 @@ export const usage = `
 
 ## 最近更新
 
-* 修复：以小博大不能正确地改变手牌
+* 调整：狸猫换太子、偷天换日、乾坤大挪移现在将会选择一名其它玩家作为目标，不会出现选择自己作为目标的情况了
+* 新增：三山四海-当前玩家随机获得1~4张3或1~4张4
 
 ## 基本指令用法
 
