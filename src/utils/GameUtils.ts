@@ -42,14 +42,15 @@ export const getSpecifiedPlayer = async (ctx: Context, userId: string, roomId: n
 
 /**
  * 随机选择一名其它玩家
- * @param room
+ * @param originalRoom
  * @param currentPlayerId
  * @param excludeOneCard 是否排除只剩一张手牌的玩家
  */
-export const getAnotherPlayer = (room: RoomTypes, currentPlayerId: string, excludeOneCard: boolean = false) => {
+export const getAnotherPlayer = (originalRoom: RoomTypes, currentPlayerId: string, excludeOneCard: boolean = false) => {
+  const room = JSON.parse(JSON.stringify(originalRoom))
   room.playerList = room.playerList.filter(id => id !== currentPlayerId);
   if (excludeOneCard) {
-    room.playerList.filter(id => room.playerDetail[id].cards.length > 1)
+    room.playerList = room.playerList.filter(id => room.playerDetail[id].cards.length > 1)
   }
   const randomIndex = Math.floor(Math.random() * room.playerList.length);
   return room.playerList[randomIndex];
