@@ -2,6 +2,7 @@ import {Context, h, Logger, Random, segment} from "koishi";
 import {getJoinedRoom} from "../utils/GameUtils";
 import {initHand, sortCards} from "../core/CardUtils";
 import {CONST} from "../utils/CONST";
+import {StageDict, StageInfo, StageTypes} from "../types/StageTypes";
 
 export const start = async (ctx: Context, _, logger: Logger) => {
   let {userId, username} = _.session.author;
@@ -32,6 +33,21 @@ export const start = async (ctx: Context, _, logger: Logger) => {
       lordList.forEach((id: string) => {
         room.playerDetail[id].isLord = true;
       })
+      let res = []
+
+      // 当房间模式为地狱之旅时，随机一个场景
+      if (room.mode === 3) {
+        function getRandomEnumValue<T>(enumeration: T): T[keyof T] {
+          const values = Object.values(enumeration);
+          const randomIndex = Math.floor(Math.random() * values.length);
+          return values[randomIndex];
+        }
+
+        const randomStage = getRandomEnumValue(StageTypes);
+        res.push(`本局场景是：${StageDict[randomStage]}`)
+        res.push(`场景介绍：${StageInfo[randomStage]}`)
+        room.stageType = StageTypes[randomStage]
+      }
       // 发牌：3人房发3张地主牌，5人房给每个地主发4张地主牌，4、6人房没地主牌
       const holeCardsRecord = [];  // 发出的地主牌的记录器
       room.playerList.forEach((id: string, index: number) => {
@@ -55,7 +71,6 @@ export const start = async (ctx: Context, _, logger: Logger) => {
       room.prevStats.playerName = room.playerDetail[firstLordId].name;
       room.nextPlayerId = firstLordId;
       // 播报地主和对应地主牌的信息
-      let res = []
       const lordNameList = room.playerList.filter(id => room.playerDetail[id].isLord)
         .map(id => room.playerDetail[id].name)
       const peasantNameList = room.playerList.filter(id => !room.playerDetail[id].isLord)

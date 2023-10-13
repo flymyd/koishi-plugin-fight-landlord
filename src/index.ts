@@ -27,7 +27,7 @@ export function apply(ctx: Context) {
   // TODO _.session.author 待迁移为 let {userId, username} = _.session;
 
   // 插件重启时总是重置数据表
-  resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
+  // resetDB(ctx).then(() => logger.info(`斗地主数据表 ${CONST.DB} 初始化成功`))
 
   ctx.command('ddz', '欢乐斗地主').action(async (_) => (await help()))
 
@@ -36,7 +36,7 @@ export function apply(ctx: Context) {
     .action(async (_) => (await list(ctx, _, logger)))
 
   // 创建房间
-  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式，2：万宁模式。')
+  ctx.command('ddz.create', '创建斗地主房间，添加参数-m以指定模式。0：经典模式，1：魔改模式，2：万宁模式，3：地狱之旅。')
     .option('mode', '-m <value:number>', {fallback: 0})
     .action(async (_) => (await create(ctx, _, logger)))
 
@@ -94,7 +94,7 @@ export const usage = `
 ## 最近更新
 
 * 调整：狸猫换太子、偷天换日、乾坤大挪移现在将会选择一名其它玩家作为目标，不会出现选择自己作为目标的情况了
-* 新增：三山四海-当前玩家随机获得1~4张3或1~4张4
+* 新增：三山四海-当前玩家随机获得1到4张3或1到4张4
 
 ## 基本指令用法
 

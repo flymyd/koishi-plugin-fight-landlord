@@ -85,6 +85,11 @@ export const play = async (ctx: Context, _, logger: Logger, card: string) => {
               if (modernEvent) {
                 return modernEvent;
               }
+            } else if (room.mode == 3) {
+              const modernEvent = await modernEventGenerator(ctx, room, currentPlayer.id, 0.25);
+              if (modernEvent) {
+                return modernEvent;
+              }
             }
             // 出牌成功逻辑：播报剩余手牌, 刷新对局信息
             const res = [];

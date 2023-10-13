@@ -6,7 +6,7 @@ import {CONST} from "../utils/CONST";
 
 export const create = async (ctx: Context, _, logger: Logger) => {
   // 过滤参数表
-  if (Number(_.options.mode) > 2) {
+  if (Number(_.options.mode) > 3) {
     return '请输入正确的-m参数。'
   }
   let {userId, username} = _.session.author;
@@ -26,7 +26,8 @@ export const create = async (ctx: Context, _, logger: Logger) => {
     playerList: [userId],
     prevStats: {cards: [], playerId: "", playerName: ""},
     status: 0,
-    usedCard: []
+    usedCard: [],
+    stageType: 0
   }
   newRoom.playerDetail[userId] = {isLord: false, name: username, cards: []}
   try {

@@ -1,5 +1,6 @@
 import {Field} from "@minatojs/core";
 import {CardTypes} from "./CardTypes";
+import {StageTypes} from "./StageTypes";
 
 /**
  * 斗地主数据库类型
@@ -41,10 +42,11 @@ export interface RoomTypes {
   prevStats: {
     cards: Array<CardTypes>, // 堂子
     playerId: string, // 堂主id
-    playerName: string, //堂主昵称
+    playerName: string, // 堂主昵称
   },
   nextPlayerId: string, // 下家ID
-  usedCard: Array<CardTypes>, //弃牌堆
+  usedCard: Array<CardTypes>, // 弃牌堆
+  stageType: StageTypes,  // 场景标记
 }
 
 /**
@@ -58,5 +60,6 @@ export const RoomTypesExtends: Field.Extension = {
   playerDetail: 'json',
   prevStats: 'json',
   nextPlayerId: 'string',
-  usedCard: 'json'
+  usedCard: 'json',
+  stageType: 'unsigned'
 }

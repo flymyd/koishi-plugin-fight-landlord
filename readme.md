@@ -1,6 +1,6 @@
 # koishi-plugin-fightlandlord
 
-[![npm](https://img.shields.io/npm/v/koishi-plugin-fight-landlord?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-fightlandlord)
+[![npm](https://img.shields.io/npm/v/koishi-plugin-fight-landlord?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-fight-landlord)
 
 ## koishi斗地主游戏
 
@@ -62,17 +62,22 @@
 * 乾坤大挪移-将一名玩家的全部手牌和自己的全部手牌交换
 * 反转了-翻转出牌顺序
 * 摇滚狂欢-每名手牌数大于1的玩家均失去点数最大的一张手牌
+* 三山四海-当前玩家随机获得1到4张3或1到4张4
 
 ### 规则：万宁斗地主
 
-在魔改斗地主的基础上扩充而来，技能触发概率增大。使用ddz.create -m 2以启用。
+在魔改斗地主的基础上扩充而来，技能触发概率提高到25%。使用ddz.create -m 2以启用。
+
+### 规则：地狱之旅
+
+在万宁斗地主的基础上扩充而来，游戏开始时抽取地狱场景卡。根据场景卡的描述，在不同游戏阶段触发事件。该事件不会影响技能的判定。
 
 ### 更新日志
 
 #### 1.1.12
 
 * 调整：狸猫换太子、偷天换日、乾坤大挪移现在将会选择一名其它玩家作为目标，不会出现选择自己作为目标的情况了
-* 新增：三山四海-当前玩家随机获得1~4张3或1~4张4
+* 新增：三山四海-当前玩家随机获得1到4张3或1到4张4
 
 #### 1.1.11
 
