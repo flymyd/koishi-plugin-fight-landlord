@@ -4,6 +4,14 @@ import {initHand, sortCards} from "../core/CardUtils";
 import {CONST} from "../utils/CONST";
 import {StageDict, StageInfo, StageTypes} from "../types/StageTypes";
 
+type EnumKeys<T> = Exclude<keyof T, number>;
+
+function getRandomEnumValue<T>(enumeration: T): string {
+  const keys: EnumKeys<typeof StageTypes>[] = Object.keys(StageTypes).filter(key => isNaN(Number(key))) as EnumKeys<typeof StageTypes>[];
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex];
+}
+
 export const start = async (ctx: Context, _, logger: Logger) => {
   let {userId, username} = _.session.author;
   const joinedList = await getJoinedRoom(ctx, userId);
@@ -34,19 +42,12 @@ export const start = async (ctx: Context, _, logger: Logger) => {
         room.playerDetail[id].isLord = true;
       })
       let res = []
-
       // 当房间模式为地狱之旅时，随机一个场景
       if (room.mode === 3) {
-        function getRandomEnumValue<T>(enumeration: T): T[keyof T] {
-          const values = Object.values(enumeration);
-          const randomIndex = Math.floor(Math.random() * values.length);
-          return values[randomIndex];
-        }
-
         const randomStage = getRandomEnumValue(StageTypes);
+        room.stageType = randomStage;
         res.push(`本局场景是：${StageDict[randomStage]}`)
         res.push(`场景介绍：${StageInfo[randomStage]}`)
-        room.stageType = StageTypes[randomStage]
       }
       // 发牌：3人房发3张地主牌，5人房给每个地主发4张地主牌，4、6人房没地主牌
       const holeCardsRecord = [];  // 发出的地主牌的记录器

@@ -34,8 +34,8 @@ export const info = async (ctx: Context, _, logger: Logger) => {
       .filter(id => (playerDetail[id].isLord === currentDetail.isLord) && id != userId)
       .map(id => playerDetail[id].name);
     if (room.mode === 3) {
-      results.push(`本局场景是：${StageDict[getStageKeyByValue(room.stageType)]}`)
-      results.push(`场景介绍：${StageInfo[getStageKeyByValue(room.stageType)]}`)
+      results.push(`本局场景是：${StageDict[room.stageType]}`)
+      results.push(`场景介绍：${StageInfo[room.stageType]}`)
     }
     results.push(`你的身份是：${currentDetail.isLord ? '地主' : '农民'}`)
     results.push(`你的队友是：${member.length > 0 ? member.join("、") : '无'}`)
