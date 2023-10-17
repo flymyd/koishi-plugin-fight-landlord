@@ -4,7 +4,7 @@ import {GameTypeDict} from "../types/GameTypes";
 
 export const list = async (ctx: Context, _, logger: Logger) => {
   const list = await ctx.database.get(CONST.DB, {})
-  const res = list.map(obj => {
+  const res = list.filter(obj => obj.playerList.length > 0).map(obj => {
     const hostPlayerId = obj.playerList[0];  // 房主ID
     const hostPlayerName = obj.playerDetail[hostPlayerId].name;  //房主昵称
     const mode = GameTypeDict[obj.mode];

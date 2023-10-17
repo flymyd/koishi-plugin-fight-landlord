@@ -84,7 +84,6 @@ export function apply(ctx: Context) {
     const room = await ctx.database.get(CONST.DB, 1) as Array<RoomTypes>
     let {userId, username} = _.session.author;
     const id = getAnotherPlayer(room[0], userId)
-    console.log(id)
   })
 }
 
