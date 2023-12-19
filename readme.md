@@ -1,6 +1,6 @@
 # koishi-plugin-fightlandlord
 
-[![npm](https://img.shields.io/npm/v/koishi-plugin-fight-landlord?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-fightlandlord)
+[![npm](https://img.shields.io/npm/v/koishi-plugin-fight-landlord?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-fight-landlord)
 
 ## koishi斗地主游戏
 
